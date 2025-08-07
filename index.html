@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed OpenPlay Import Template Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Add this CSS to your existing <style> section -->
+<!-- Add this CSS to your existing <style> section -->
+
+<!-- Add this CSS to your existing <style> section -->
+<style>
+/* Splash Screen Styles */
+.splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 2.5s ease-in-out infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.8s ease-out;
+}
+
+.splash-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.splash-logo {
+    max-width: 500px;
+    max-height: 350px;
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+    animation: logoEntrance 2s ease-out forwards;
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes logoEntrance {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px) rotateY(-15deg);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05) translateY(-5px) rotateY(0deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0px) rotateY(0deg);
+    }
+}
+
+/* Pulse animation for the logo */
+.splash-logo::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    animation: pulse 2s ease-out infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+}
+
+/* Hide main container initially */
+.container {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.container.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+</style>
+
+<!-- Add this HTML right after the opening <body> tag -->
+<div id="splashScreen" class="splash-screen">
+    <img src="https://i.imgur.com/VIGeC2U.png" alt="Logo" class="splash-logo" id="splashLogo">
+</div>
+
+<!-- Add this JavaScript at the end of your existing script, before the closing </script> tag -->
+<script>
+// Splash screen functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const splashScreen = document.getElementById('splashScreen');
+    const container = document.querySelector('.container');
+    
+    // Show splash screen for 2.5 seconds total (0.5s entrance + 1.5s display + 0.5s fade)
+    setTimeout(() => {
+        // Start fade out
+        splashScreen.classList.add('fade-out');
+        
+        // Show main content
+        setTimeout(() => {
+            container.classList.add('show');
+            // Remove splash screen from DOM after animation
+            setTimeout(() => {
+                splashScreen.remove();
+            }, 800);
+        }, 200);
+    }, 2000);
+});
+</script>
+
+	<style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 75%, #f5576c 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            animation: patternMove 20s linear infinite;
+        }
+        
+        @keyframes patternMove {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(60px) translateY(60px); }
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+            font-weight: 400;
+        }
+        
+        .main-content {
+            padding: 50px 40px;
+        }
+        
+        .step {
+            margin-bottom: 50px;
+            padding: 40px;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border-radius: 20px;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            box-shadow: 
+                0 10px 25px rgba(0, 0, 0, 0.05),
+                0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899, #f59e0b);
+        }
+        
+
+        
+        .step:hover {
+            transform: translateY(-8px);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.1),
+                0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .step h2 {
+            color: #1e293b;
+            margin-bottom: 16px;
+            font-size: 1.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .step p {
+            color: #64748b;
+            margin-bottom: 24px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+        
+        .file-upload input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .upload-button {
+            display: inline-block;
+            padding: 18px 36px;
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+            color: white;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+            box-shadow: 
+                0 10px 25px rgba(59, 130, 246, 0.3),
+                0 4px 12px rgba(59, 130, 246, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .upload-button:hover::before {
+            left: 100%;
+        }
+        
+        .upload-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 20px 40px rgba(59, 130, 246, 0.4),
+                0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .process-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            color: white;
+            border: none;
+            padding: 18px 48px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 24px;
+            box-shadow: 
+                0 10px 25px rgba(16, 185, 129, 0.3),
+                0 4px 12px rgba(16, 185, 129, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .process-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .process-button:hover::before {
+            left: 100%;
+        }
+        
+        .process-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 20px 40px rgba(16, 185, 129, 0.4),
+                0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .process-button:disabled {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .download-button {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+            color: white;
+            border: none;
+            padding: 18px 48px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 24px;
+            box-shadow: 
+                0 10px 25px rgba(245, 158, 11, 0.3),
+                0 4px 12px rgba(245, 158, 11, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .download-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .download-button:hover::before {
+            left: 100%;
+        }
+        
+        .download-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 20px 40px rgba(245, 158, 11, 0.4),
+                0 10px 20px rgba(245, 158, 11, 0.3);
+        }
+        
+        .status {
+            margin-top: 24px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .status.success {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border: 2px solid #34d399;
+            box-shadow: 0 4px 12px rgba(52, 211, 153, 0.2);
+        }
+        
+        .status.error {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border: 2px solid #f87171;
+            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2);
+        }
+        
+        .status.info {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            border: 2px solid #60a5fa;
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+        }
+        
+        .preview {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 
+                inset 0 2px 8px rgba(0, 0, 0, 0.05),
+                0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .preview table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        .preview th, .preview td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .preview th {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .preview tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 32px 0;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .spinner {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading p {
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .fixes {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #60a5fa;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.15);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .fixes h3 {
+            color: #1e40af;
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .fixes ul {
+            color: #1e40af;
+            margin-left: 20px;
+        }
+
+        .fixes li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 20px;
+            }
+            
+            .main-content {
+                padding: 30px 20px;
+            }
+            
+            .step {
+                padding: 30px 20px;
+                margin-bottom: 30px;
+            }
+            
+            .header {
+                padding: 40px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>OpenPlay Import Converter</h1>
+            <p>Automatically convert Label Copy spreadsheets to OpenPlay Import Templates</p>
+        </div>
+        
+        <div class="main-content">
+           
+            <div class="step">
+                <h2>📂 Step 1: Upload Label Copy File</h2>
+                <p>Upload your Label Copy Excel file (.xlsx) containing the music release information.</p>
+                <div class="file-upload">
+                    <input type="file" id="labelCopyInput" accept=".xlsx,.xls" />
+                    <div class="upload-button">Choose Label Copy File</div>
+                </div>
+                <div id="labelCopyStatus"></div>
+                <div id="labelCopyPreview" class="preview" style="display: none;"></div>
+            </div>
+            
+            <div class="step">
+                <h2>📋 Step 2: Upload OpenPlay Template</h2>
+                <p>Upload your empty OpenPlay Import Template (.xlsx) to be populated with the label copy data.</p>
+                <div class="file-upload">
+                    <input type="file" id="templateInput" accept=".xlsx,.xls" />
+                    <div class="upload-button">Choose OpenPlay Template</div>
+                </div>
+                <div id="templateStatus"></div>
+            </div>
+            
+            <div class="step">
+                <h2>⚙️ Step 3: Process & Convert</h2>
+                <p>Process the label copy data and generate the populated OpenPlay import template.</p>
+                <button id="processButton" class="process-button" disabled>🚀 Process Files</button>
+                
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <p>Processing files...</p>
+                </div>
+                
+                <div id="processStatus"></div>
+            </div>
+            
+            <div class="step">
+                <h2>💾 Step 4: Download Result</h2>
+                <p>Download your populated OpenPlay Import Template ready for upload to the system.</p>
+                <button id="downloadButton" class="download-button" style="display: none;">📥 Download Fixed Template</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let labelCopyData = null;
+        let templateWorkbook = null;
+        let processedWorkbook = null;
+		let columnMapping = null;
+
+        // File upload handlers
+        document.getElementById('labelCopyInput').addEventListener('change', handleLabelCopyUpload);
+        document.getElementById('templateInput').addEventListener('change', handleTemplateUpload);
+        document.getElementById('processButton').addEventListener('click', processFiles);
+        document.getElementById('downloadButton').addEventListener('click', downloadResult);
+
+        function handleLabelCopyUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    labelCopyData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
+                    
+                    document.getElementById('labelCopyStatus').innerHTML = 
+                        `<div class="status success">✅ Label Copy loaded successfully! Found ${labelCopyData.length} rows of data.</div>`;
+                    
+                    showLabelCopyPreview();
+                    checkReadyToProcess();
+                } catch (error) {
+                    document.getElementById('labelCopyStatus').innerHTML = 
+                        `<div class="status error">❌ Error reading file: ${error.message}</div>`;
+                }
+            };
+			
+
+
+			
+            reader.readAsBinaryString(file);
+        }
+
+        function handleTemplateUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    templateWorkbook = XLSX.read(e.target.result, { type: 'binary' });
+                    document.getElementById('templateStatus').innerHTML = 
+                        `<div class="status success">✅ OpenPlay template loaded successfully! Found ${templateWorkbook.SheetNames.length} sheets.</div>`;
+                    
+                    checkReadyToProcess();
+                } catch (error) {
+                    document.getElementById('templateStatus').innerHTML = 
+                        `<div class="status error">❌ Error reading template: ${error.message}</div>`;
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        function showLabelCopyPreview() {
+            if (!labelCopyData || labelCopyData.length < 2) return;
+            
+            const preview = document.getElementById('labelCopyPreview');
+            let html = '<h3>Preview of Label Copy Data:</h3><table>';
+            
+            // Show headers
+            html += '<tr>';
+            labelCopyData[1].slice(0, 10).forEach(header => {
+                html += `<th>${header || 'Empty'}</th>`;
+            });
+            html += '<th>...</th></tr>';
+            
+            // Show first few data rows
+            for (let i = 4; i < Math.min(labelCopyData.length, 8); i++) {
+                html += '<tr>';
+                labelCopyData[i].slice(0, 10).forEach(cell => {
+                    html += `<td>${cell || ''}</td>`;
+                });
+                html += '<td>...</td></tr>';
+            }
+            
+            html += '</table>';
+            preview.innerHTML = html;
+            preview.style.display = 'block';
+        }
+
+        function checkReadyToProcess() {
+            const button = document.getElementById('processButton');
+            if (labelCopyData && templateWorkbook) {
+                button.disabled = false;
+            }
+        }
+
+        function processFiles() {
+            if (!labelCopyData || !templateWorkbook) return;
+            
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('processButton').disabled = true;
+            
+            try {
+                // Clone the template workbook
+                processedWorkbook = XLSX.utils.book_new();
+                
+                // Copy all sheets from template
+                templateWorkbook.SheetNames.forEach(sheetName => {
+                    const originalSheet = templateWorkbook.Sheets[sheetName];
+                    const originalData = XLSX.utils.sheet_to_json(originalSheet, { header: 1, defval: "" });
+					const newSheet = XLSX.utils.aoa_to_sheet(originalData);
+                    XLSX.utils.book_append_sheet(processedWorkbook, newSheet, sheetName);
+                });
+
+                // Process the data with fixes
+                populateOpenPlayTemplateFixed();
+                
+                document.getElementById('processStatus').innerHTML = 
+                    `<div class="status success">✅ Processing completed successfully! All issues have been fixed. Template populated with ${getUniqueTrackCount()} unique tracks.</div>`;
+                
+                document.getElementById('downloadButton').style.display = 'inline-block';
+                
+            } catch (error) {
+                document.getElementById('processStatus').innerHTML = 
+                    `<div class="status error">❌ Error processing files: ${error.message}</div>`;
+                console.error('Processing error:', error);
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+
+		function getUniqueTrackCount() {
+			if (!columnMapping || columnMapping.isrcCode === -1) return 0;
+
+			const dataRows = labelCopyData.slice(4); // since you said row 4 always has track data
+			const uniqueISRCs = new Set();
+
+			dataRows.forEach(row => {
+				const isrc = row[columnMapping.isrcCode]; // ✅ NOT cols
+				if (isrc && isrc.trim()) {
+					uniqueISRCs.add(isrc.trim());
+				}
+			});
+
+			return uniqueISRCs.size;
+		}
+		function createColumnMapping(headerRow) {
+			const mapping = {};
+			const columnDefinitions = {
+				// Format: 'internalName': ['Primary Search Term', 'Fallback Term 1', 'Fallback Term 2']
+				'recordLabel': ['Record Label'],
+				'productTitle': ['Product Title', 'Album Title'],
+				'productPrimaryArtist': ['Product Primary Artist', 'Album Artist'],
+				'barcode': ['Barcode/UPC', 'UPC', 'Barcode'],
+				'catalogueNumber': ['Catalogue Number', 'Catalog Number'],
+				'format': ['Format'],
+				'productType': ['Product Type'],
+				'productPYear': ['Product (P) Year', 'P Year'],
+				'productPHolder': ['Product (P) Holder', 'P Holder'],
+				'productCYear': ['Product (C) Year', 'C Year'],
+				'productCHolder': ['Product (C) Holder', 'C Holder'],
+				'releaseDate': ['Release Date'],
+				'productGenre': ['Product Genre', 'Genre'],
+				'volumeNo': ['Volume No.', 'Volume', 'Disc No.'],
+				'sides': ['Sides (if vinyl)', 'Sides'],
+				'trackNo': ['Track No.', 'Track Number', '#'],
+				'trackPrimaryArtist': ['Track Primary Artist', 'Artist', 'Track Artist'],
+				'trackMainTitle': ['Track Main Title', 'Song Title', 'Track Title', 'Main Title'],
+				'trackTitleVersion': ['Track Title Version', 'Version'],
+				'trackPYear': ['Track (P) Year'],
+				'trackPHolder': ['Track (P) Holder'],
+				'trackCYear': ['Track (C) Year'],
+				'trackCHolder': ['Track (C) Holder'],
+				'isrcCode': ['ISRC Code', 'ISRC', 'isrc code', 'Isrc Code', 'ISRC CODE', 'isrc_code'],
+				'trackDuration': ['Track Duration', 'Duration', 'Length'],
+				'trackLanguage': ['Audio Language', 'Language'],
+				'individualPerformer': ['Individual Performer', 'Performer', 'Musicians'],
+				'performerInstrumentRole': ['Performer Instrument Role', 'Instrument', 'Role'],
+				'producer': ['Producer'],
+				'recordingEngineer': ['Recording Engineer', 'Engineer'],
+				'mixer': ['Mixer'],
+				'mixEngineer': ['Mix Engineer'],
+				'mixedAt': ['Mixed At', 'Mix Location'],
+				'recordedAt': ['Recorded At', 'Recording Location'],
+				'sampleInfo': ['Sample Info'],
+				'masteringEngineer': ['Mastering Engineer'],
+				'masteredAt': ['Mastered At', 'Mastering Location'],
+				'writer': ['Writer / Composer', 'Writer', 'Composer'],
+				'publisher': ['Publisher']
+			};
+
+			// Search for each column by trying different search terms
+			Object.keys(columnDefinitions).forEach(key => {
+				const searchTerms = columnDefinitions[key];
+				let foundIndex = -1;
+				
+				// Try each search term until we find a match
+				for (const term of searchTerms) {
+					foundIndex = headerRow.findIndex(header => 
+						String(header).toLowerCase().trim() === term.toLowerCase()
+					);
+					if (foundIndex !== -1) break; // Found it, stop searching
+				}
+				
+				mapping[key] = foundIndex; // Store the found index (or -1 if not found)
+			});
+
+			return mapping;
+		}
+		function populateOpenPlayTemplateFixed() {
+			    // Create dynamic column mapping based on header names FIRST
+			const cols = createColumnMapping(labelCopyData[1]);
+			columnMapping = cols;
+			// === ADD THIS DEBUGGING SECTION ===
+			console.log("=== DEBUGGING ALTERNATE FILE ===");
+			console.log("Total rows in file:", labelCopyData.length);
+			console.log("Header row (row 1):", labelCopyData[1]);
+			console.log("Column mapping found:", cols);
+			console.log("ISRC column index:", cols.isrcCode);
+			console.log("Sample ISRC values from first few rows:");
+			for (let i = 0; i < Math.min(10, labelCopyData.length); i++) {
+				console.log(`Row ${i}, ISRC column ${cols.isrcCode}:`, labelCopyData[i][cols.isrcCode]);
+			}
+			
+			// Check if data starts at row 4 or somewhere else
+			for (let i = 0; i < Math.min(10, labelCopyData.length); i++) {
+				const row = labelCopyData[i];
+				const hasTrackData = row[cols.isrcCode] || row[cols.trackMainTitle];
+				console.log(`Row ${i} - Has track data: ${!!hasTrackData}`, row.slice(0, 5));
+			}
+			
+			// Check specifically where the actual track data starts
+			const dataRows = labelCopyData.slice(4);
+			console.log("Data rows starting from row 4:", dataRows.length);
+			console.log("First data row:", dataRows[0]);
+			console.log("ISRC in first data row:", dataRows[0] ? dataRows[0][cols.isrcCode] : "No data");
+			console.log("Track title in first data row:", dataRows[0] ? dataRows[0][cols.trackMainTitle] : "No data");
+			// === END DEBUGGING SECTION ===
+			// Create dynamic column mapping based on header names FIRST			
+			// Validate that required columns were found
+			const requiredFields = ['isrcCode', 'trackMainTitle', 'trackPrimaryArtist', 'productTitle', 'barcode'];
+			const missingFields = requiredFields.filter(field => cols[field] === -1);
+
+			if (missingFields.length > 0) {
+				throw new Error(`Missing required columns: ${missingFields.join(', ')}. Please check your file format.`);
+			}
+
+			console.log('Successfully mapped columns:', cols);
+			
+			// Extract data from label copy            
+            // Column indices in label copy
+			// Create dynamic column mapping based on header names
+
+
+            // FIXED: Create unique tracks based on ISRC to avoid duplicates
+            const uniqueTracks = new Map();
+            const isrcToTrackId = new Map();
+            let trackIdCounter = 1;
+            
+            // First pass: identify unique tracks by ISRC
+            // First pass: identify unique tracks by ISRC
+			dataRows.forEach((row, index) => {
+				const isrc = row[columnMapping.isrcCode];
+				const title = row[cols.trackMainTitle];
+				
+				// === REPLACE WITH THIS BETTER DEBUGGING ===
+				console.log(`Row ${index}:`, {
+					rowLength: row.length,
+					isrcColumnIndex: cols.isrcCode,
+					titleColumnIndex: cols.trackMainTitle,
+					isrcRawValue: isrc,
+					titleRawValue: title,
+					isrcType: typeof isrc,
+					titleType: typeof title,
+					isrcTrimmed: isrc ? String(isrc).trim() : 'null',
+					titleTrimmed: title ? String(title).trim() : 'null',
+					firstFewColumns: row.slice(0, 5),
+					isrcColumnValue: `Column ${cols.isrcCode}: "${row[cols.isrcCode]}"`,
+					titleColumnValue: `Column ${cols.trackMainTitle}: "${row[cols.trackMainTitle]}"`
+				});
+				// === END BETTER DEBUGGING ===
+				
+				if (isrc && isrc.trim() && title && title.trim()) {
+					// ... rest of existing code
+					if (!uniqueTracks.has(isrc)) {
+						// ... existing track creation code
+                        const trackId = `TRACK${String(trackIdCounter).padStart(3, '0')}`;
+                        uniqueTracks.set(isrc, {
+                            trackId: trackId,
+                            title: title,
+                            artist: row[cols.trackPrimaryArtist],
+                            isrc: isrc,
+                            version: row[cols.trackTitleVersion],
+                            duration: row[cols.trackDuration],
+                            pYear: row[cols.trackPYear],
+                            pHolder: row[cols.trackPHolder],
+                            cYear: row[cols.trackCYear],
+                            cHolder: row[cols.trackCHolder],
+                            language: row[cols.trackLanguage],
+                            genre: row[cols.productGenre],
+                            label: row[cols.recordLabel],
+                            // Store all the mapping info for this track
+                            albumInfo: {
+                                title: row[cols.productTitle],
+                                barcode: row[cols.barcode],
+                                volume: row[cols.volumeNo],
+                                side: row[cols.sides],
+                                trackNo: row[cols.trackNo]
+                            },
+                            // Store contribution info
+                            performers: row[cols.individualPerformer],
+                            roles: row[cols.performerInstrumentRole],
+                            producer: row[cols.producer],
+                            engineer: row[cols.recordingEngineer],
+                            mixer: row[cols.mixer],
+                            mixEngineer: row[cols.mixEngineer],
+                            masteringEngineer: row[cols.masteringEngineer],
+                            writer: row[cols.writer],
+                            publisher: row[cols.publisher]
+                        });
+                        isrcToTrackId.set(isrc, trackId);
+                        trackIdCounter++;
+                    }
+                }
+            });
+
+            console.log(`Created ${uniqueTracks.size} unique tracks from ${dataRows.length} rows`);
+
+            // Populate all sheets with fixed logic
+            populateAlbumsSheetFixed(dataRows, cols);
+            populateTracksSheetFixed(uniqueTracks);
+            populateWorksSheetFixed(uniqueTracks);
+            populateArtistsSheetFixed(dataRows, cols, uniqueTracks);
+            populatePublishersSheetFixed(uniqueTracks);
+            populateMappingSheetsFixed(uniqueTracks, dataRows, cols);
+            populateContributionsSheetsFixed(uniqueTracks);
+        }
+
+        function populateAlbumsSheetFixed(dataRows, cols) {
+            const albumsSheet = processedWorkbook.Sheets['Albums'];
+            const albumsData = XLSX.utils.sheet_to_json(albumsSheet, { header: 1, defval: "" });
+            
+            // FIXED: Get unique albums, filter out empty ones
+            const albums = new Map();
+            dataRows.forEach(row => {
+                const title = row[cols.productTitle];
+                const barcode = row[cols.barcode];
+                
+				console.log("Album check:", {
+					title: title,
+					barcode: barcode,
+					titleIndex: cols.productTitle,
+					barcodeIndex: cols.barcode
+				});
+				
+                // Only create album if both title and barcode are present and not empty
+                if (title && title.trim() && barcode && barcode.trim()) {
+                    const albumKey = `${title}_${barcode}`;
+                    if (!albums.has(albumKey)) {
+                        albums.set(albumKey, {
+                            title: title,
+                            artist: row[cols.productPrimaryArtist],
+                            upc: barcode,
+                            catalog: row[cols.catalogueNumber],
+                            format: row[cols.format],
+                            genre: row[cols.productGenre],
+                            releaseDate: formatDate(row[cols.releaseDate]),
+                            pYear: row[cols.productPYear],
+                            pHolder: row[cols.productPHolder],
+                            cYear: row[cols.productCYear],
+                            cHolder: row[cols.productCHolder],
+                            label: row[cols.recordLabel]
+                        });
+                    }
+                }
+            });
+
+            // Add album data starting from row 4
+            let rowIndex = 4;
+            albums.forEach((album, key) => {
+                const albumId = `ALBUM${String(rowIndex - 3).padStart(3, '0')}`;
+                
+                // Ensure we have enough rows
+                while (albumsData.length <= rowIndex) {
+                    albumsData.push([]);
+                }
+                
+                albumsData[rowIndex] = [
+                    albumId, // import_id
+                    album.title, // title
+                    "", // import_display_title
+                    "Digital Album", // configuration_code
+                    "", // version
+                    "", // import_version_display_title
+                    album.label, // import_label
+                    "", // display_label
+                    "", // wmg_distribution_group_code
+                    album.upc, // upc_number
+                    "", // generate_upc
+                    album.catalog, // release_number
+                    "", // promotional
+                    "", // box_set
+                    "", // indie_exclusive
+                    album.genre, // primary_genre_code
+                    "", // primary_sub_genre_code
+                    album.releaseDate, // original_release_date
+                    album.releaseDate, // release_date
+                    "", // is_reissue
+                    "", // project_import_id
+                    "", // project_code
+                    "", // artist_type
+                    "", // compilation_type
+                    "", // artist_display_name_format
+                    "", // import_music_type
+                    "", // import_parental_advisory
+                    "", // video_type
+                    "", // video_release_year
+                    "", // video_production_company
+                    "", // audio_presentation
+                    "", // resolution_type
+                    "", // studio_code
+                    album.pYear, // pline_year
+                    album.pHolder, // pline_owner
+                    "", // pline_license
+                    album.cYear, // cline_year
+                    album.cHolder, // cline_owner
+                    "", // cline_license
+                    "", // keywords
+                    "", // effective_release_price_tier_code
+                    "", // effective_audio_track_price_tier_code
+                    "", // wmg_audio_language_code
+                    "English", // wmg_metadata_language_code
+                    "", // metadata_language_country_code
+                    "", // us_initial_ship_quantity
+                    ...Array(Math.max(0, (albumsData[0] || []).length - 44)).fill("")
+                ];
+                rowIndex++;
+            });
+
+            processedWorkbook.Sheets['Albums'] = XLSX.utils.aoa_to_sheet(albumsData);
+        }
+
+        function populateTracksSheetFixed(uniqueTracks) {
+            const tracksSheet = processedWorkbook.Sheets['Tracks'];
+            const tracksData = XLSX.utils.sheet_to_json(tracksSheet, { header: 1, defval: "" });
+            
+            let rowIndex = 4;
+            uniqueTracks.forEach((track, isrc) => {
+                const duration = formatDuration(track.duration);
+                
+                // Ensure we have enough rows
+                while (tracksData.length <= rowIndex) {
+                    tracksData.push([]);
+                }
+                
+                tracksData[rowIndex] = [
+                    track.trackId, // import_id
+                    track.title, // title
+                    "", // import_display_title
+                    track.isrc, // isrc
+                    "", // generate_isrc
+                    track.version || "", // version
+                    "", // import_version_display_title
+                    track.label, // import_label
+                    "", // wmg_distribution_group_code
+                    "Audio", // track_type
+                    "", // configuration
+                    "", // video_type
+                    "", // parental_advisory
+                    track.genre, // primary_genre_code
+                    "", // primary_sub_genre_code
+                    "", // import_music_type
+                    duration, // length
+                    "", // import_audio_hook
+                    "", // import_audio_sample_length
+                    track.pYear, // pline_year
+                    track.pHolder, // pline_owner
+                    "", // pline_license
+                    track.cYear, // cline_year
+                    track.cHolder, // cline_owner
+                    "", // cline_license
+                    "", // artist_type
+                    "", // artist_display_name_format
+                    track.language || "English", // wmg_audio_language_code
+                    "English", // wmg_metadata_language_code
+                    "", // metadata_language_country_code
+                    "", // audio_presentation_code
+                    "", // primary_recording_location_code
+                    "", // recording_locations_names
+                    "", // recording_end_date_year
+                    "", // session_type
+                    "", // performance_type_code
+                    "", // video_audio_isrc
+                    "", // video_category_code
+                    "", // video_release_year
+                    "", // video_production_company
+                    "", // keywords
+                    "" // notes
+                ];
+                rowIndex++;
+            });
+
+            processedWorkbook.Sheets['Tracks'] = XLSX.utils.aoa_to_sheet(tracksData);
+        }
+
+        function populateWorksSheetFixed(uniqueTracks) {
+            const worksSheet = processedWorkbook.Sheets['Works'];
+            const worksData = XLSX.utils.sheet_to_json(worksSheet, { header: 1, defval: "" });
+            
+            let rowIndex = 4;
+            uniqueTracks.forEach((track, isrc) => {
+                const workId = track.trackId.replace('TRACK', 'WORK');
+                
+                // Ensure we have enough rows
+                while (worksData.length <= rowIndex) {
+                    worksData.push([]);
+                }
+                
+                worksData[rowIndex] = [
+                    workId, // import_id
+                    track.title, // title
+                    "Pop", // import_music_type
+                    "", // iswc
+                    "", // label_work_code
+                    "", // copyright_year
+                    "English", // wmg_language_code
+                    "", // agency
+                    "" // description
+                ];
+                rowIndex++;
+            });
+
+            processedWorkbook.Sheets['Works'] = XLSX.utils.aoa_to_sheet(worksData);
+        }
+
+        function populateArtistsSheetFixed(dataRows, cols, uniqueTracks) {
+            const artistsSheet = processedWorkbook.Sheets['Artists'];
+            const artistsData = XLSX.utils.sheet_to_json(artistsSheet, { header: 1, defval: "" });
+            
+            // Get unique artists
+            const artists = new Set();
+            
+            // Add primary artists from albums and tracks
+            dataRows.forEach(row => {
+                if (row[cols.productPrimaryArtist] && row[cols.productPrimaryArtist].trim()) {
+                    artists.add(row[cols.productPrimaryArtist].trim());
+                }
+                if (row[cols.trackPrimaryArtist] && row[cols.trackPrimaryArtist].trim()) {
+                    artists.add(row[cols.trackPrimaryArtist].trim());
+                }
+            });
+            
+            // Add contributors from unique tracks
+            uniqueTracks.forEach((track) => {
+                // Split pipe-delimited performers
+                if (track.performers && track.performers.trim()) {
+                    const performerNames = track.performers.split('|').map(name => name.trim()).filter(name => name);
+                    performerNames.forEach(name => artists.add(name));
+                }
+                
+                // Add other contributors
+                ['producer', 'engineer', 'mixer', 'mixEngineer', 'masteringEngineer', 'writer'].forEach(role => {
+                    if (track[role] && track[role].trim()) {
+                        const contributors = track[role].split(/[,;]/).map(name => name.trim()).filter(name => name);
+                        contributors.forEach(name => artists.add(name));
+                    }
+                });
+            });
+
+            let rowIndex = 4;
+            artists.forEach(artist => {
+                // Ensure we have enough rows
+                while (artistsData.length <= rowIndex) {
+                    artistsData.push([]);
+                }
+                
+                artistsData[rowIndex] = [
+                    artist, // name
+                    "", // ipi_name_numbers
+                    "" // empty column
+                ];
+                rowIndex++;
+            });
+
+            processedWorkbook.Sheets['Artists'] = XLSX.utils.aoa_to_sheet(artistsData);
+        }
+
+        function populatePublishersSheetFixed(uniqueTracks) {
+            const publishersSheet = processedWorkbook.Sheets['Publishers'];
+            const publishersData = XLSX.utils.sheet_to_json(publishersSheet, { header: 1, defval: "" });
+            
+            // Get unique publishers
+            const publishers = new Set();
+            uniqueTracks.forEach((track) => {
+                if (track.publisher && track.publisher.trim()) {
+                    publishers.add(track.publisher.trim());
+                }
+            });
+
+            let rowIndex = 4;
+            let publisherIdCounter = 1;
+            publishers.forEach(publisher => {
+                const publisherId = `PUB${String(publisherIdCounter).padStart(3, '0')}`;
+                
+                // Ensure we have enough rows
+                while (publishersData.length <= rowIndex) {
+                    publishersData.push([]);
+                }
+                
+                publishersData[rowIndex] = [
+                    publisherId, // import_id
+                    publisher, // name
+                    "" // ipi_name_numbers
+                ];
+                rowIndex++;
+                publisherIdCounter++;
+            });
+
+            processedWorkbook.Sheets['Publishers'] = XLSX.utils.aoa_to_sheet(publishersData);
+        }
+
+        function populateMappingSheetsFixed(uniqueTracks, dataRows, cols) {
+            const mapTrackToAlbumSheet = processedWorkbook.Sheets['MapTrackToAlbum'];
+            const mapTrackToAlbumData = XLSX.utils.sheet_to_json(mapTrackToAlbumSheet, { header: 1, defval: "" });
+
+            const albumMap = new Map();
+            let albumIndex = 1;
+
+            // First: map albums
+            dataRows.forEach(row => {
+                const albumTitle = row[cols.productTitle];
+                const barcode = row[cols.barcode];
+                const key = `${albumTitle}_${barcode}`;
+                if (albumTitle && barcode && !albumMap.has(key)) {
+                    albumMap.set(key, `ALBUM${String(albumIndex).padStart(3, '0')}`);
+                    albumIndex++;
+                }
+            });
+
+            let mapRowIndex = 4;
+
+            // Now: map tracks to albums using exact info from each row
+            dataRows.forEach(row => {
+                if (!columnMapping) return 0;
+				const isrc = row[columnMapping.isrcCode];
+                const albumTitle = row[cols.productTitle];
+                const barcode = row[cols.barcode];
+                const volumeNo = row[cols.volumeNo] || 1;
+                const trackNo = row[cols.trackNo];
+
+                if (isrc && uniqueTracks.has(isrc)) {
+                    const trackId = uniqueTracks.get(isrc).trackId;
+                    const albumId = albumMap.get(`${albumTitle}_${barcode}`);
+
+                    if (trackId && albumId) {
+                        while (mapTrackToAlbumData.length <= mapRowIndex) {
+                            mapTrackToAlbumData.push([]);
+                        }
+
+                        mapTrackToAlbumData[mapRowIndex] = [
+                            albumId,        // Album ID
+                            trackId,        // Track ID
+                            volumeNo,       // Disc Number
+                            "",             // Side (optional)
+                            trackNo         // Track Number
+                        ];
+                        mapRowIndex++;
+                    }
+                }
+            });
+
+            processedWorkbook.Sheets['MapTrackToAlbum'] = XLSX.utils.aoa_to_sheet(mapTrackToAlbumData);
+        }
+
+
+
+            // TrackPrimaryContributions
+            const trackPrimarySheet = processedWorkbook.Sheets['TrackPrimaryContributions'];
+            const trackPrimaryData = XLSX.utils.sheet_to_json(trackPrimarySheet, { header: 1, defval: "" });
+            
+            let primaryRowIndex = 4;
+            uniqueTracks.forEach((track, isrc) => {
+                // Ensure we have enough rows
+                while (trackPrimaryData.length <= primaryRowIndex) {
+                    trackPrimaryData.push([]);
+                }
+                
+                trackPrimaryData[primaryRowIndex] = [
+                    track.trackId, // import_id
+                    track.artist, // import_artist_by_name
+                    "" // featured
+                ];
+                primaryRowIndex++;
+            });
+
+            // MapWorkToTrack
+            const mapWorkToTrackSheet = processedWorkbook.Sheets['MapWorkToTrack'];
+            const mapWorkToTrackData = XLSX.utils.sheet_to_json(mapWorkToTrackSheet, { header: 1, defval: "" });
+            
+            let workMapRowIndex = 4;
+            uniqueTracks.forEach((track, isrc) => {
+                const workId = track.trackId.replace('TRACK', 'WORK');
+                
+                // Ensure we have enough rows
+                while (mapWorkToTrackData.length <= workMapRowIndex) {
+                    mapWorkToTrackData.push([]);
+                }
+                
+                mapWorkToTrackData[workMapRowIndex] = [
+                    track.trackId, // track_import_id
+                    workId, // work_import_id
+                    "" // empty column
+                ];
+                workMapRowIndex++;
+            });
+
+            // Update sheets
+            processedWorkbook.Sheets['MapTrackToAlbum'] = XLSX.utils.aoa_to_sheet(mapTrackToAlbumData);
+            processedWorkbook.Sheets['TrackPrimaryContributions'] = XLSX.utils.aoa_to_sheet(trackPrimaryData);
+            processedWorkbook.Sheets['MapWorkToTrack'] = XLSX.utils.aoa_to_sheet(mapWorkToTrackData);
+        
+
+        function populateContributionsSheetsFixed(uniqueTracks) {
+            // FIXED: TrackContributions with proper pipe-delimited splitting
+            const trackContribSheet = processedWorkbook.Sheets['TrackContributions'];
+            const trackContribData = XLSX.utils.sheet_to_json(trackContribSheet, { header: 1, defval: "" });
+            
+            const workContribSheet = processedWorkbook.Sheets['WorkContributions'];
+            const workContribData = XLSX.utils.sheet_to_json(workContribSheet, { header: 1, defval: "" });
+            
+            let trackContribRowIndex = 4;
+            let workContribRowIndex = 4;
+            
+            uniqueTracks.forEach((track, isrc) => {
+                const workId = track.trackId.replace('TRACK', 'WORK');
+                
+                // FIXED: Split pipe-delimited performers and roles
+                if (track.performers && track.performers.trim()) {
+                    const performerNames = track.performers.split('|').map(name => name.trim()).filter(name => name);
+                    const performerRoles = track.roles ? track.roles.split('|').map(role => role.trim()).filter(role => role) : [];
+                    
+                    performerNames.forEach((performer, index) => {
+                        const role = performerRoles[index] || performerRoles[0] || 'Performer';
+                        
+                        // Handle multiple roles for one performer (comma-separated)
+                        const roles = role.split(',').map(r => r.trim()).filter(r => r);
+                        
+                        roles.forEach(individualRole => {
+                            // Ensure we have enough rows
+                            while (trackContribData.length <= trackContribRowIndex) {
+                                trackContribData.push([]);
+                            }
+                            
+                            trackContribData[trackContribRowIndex] = [
+                                track.trackId, // track_id
+                                performer, // artist_name
+                                'Instrument', // role
+                                individualRole // type
+                            ];
+                            trackContribRowIndex++;
+                        });
+                    });
+                }
+                
+                // Add other contributors (non-pipe-delimited)
+                const contributors = [
+                    { name: track.producer, role: 'Producer', type: 'Producer' },
+                    { name: track.engineer, role: 'Engineer', type: 'Recording Engineer' },
+                    { name: track.mixer, role: 'Engineer', type: 'Mixer' },
+                    { name: track.mixEngineer, role: 'Engineer', type: 'Mix Engineer' },
+                    { name: track.masteringEngineer, role: 'Engineer', type: 'Mastering Engineer' }
+                ];
+                
+                contributors.forEach(contributor => {
+                    if (contributor.name && contributor.name.trim()) {
+                        const names = contributor.name.split(/[,;]/).map(name => name.trim()).filter(name => name);
+                        
+                        names.forEach(name => {
+                            // Ensure we have enough rows
+                            while (trackContribData.length <= trackContribRowIndex) {
+                                trackContribData.push([]);
+                            }
+                            
+                            trackContribData[trackContribRowIndex] = [
+                                track.trackId, // track_id
+                                name, // artist_name
+                                contributor.role, // role
+                                contributor.type // type
+                            ];
+                            trackContribRowIndex++;
+                        });
+                    }
+                });
+                
+                // Work contributors (writers/composers)
+                if (track.writer && track.writer.trim()) {
+                    const writers = track.writer.split(/[,;]/).map(w => w.trim()).filter(w => w);
+                    
+                    writers.forEach(writer => {
+                        // Ensure we have enough rows
+                        while (workContribData.length <= workContribRowIndex) {
+                            workContribData.push([]);
+                        }
+                        
+                        workContribData[workContribRowIndex] = [
+                            workId, // work_id
+                            writer, // artist_name
+                            'Composition & Lyrics', // role
+                            'Composer', // type
+                            '', // affiliation
+                            '', // split_percentage
+                            '', // territory
+                            '' // territory_restrictions
+                        ];
+                        workContribRowIndex++;
+                    });
+                }
+            });
+            
+            // Update sheets
+            processedWorkbook.Sheets['TrackContributions'] = XLSX.utils.aoa_to_sheet(trackContribData);
+            processedWorkbook.Sheets['WorkContributions'] = XLSX.utils.aoa_to_sheet(workContribData);
+        }
+
+        function formatDate(dateValue) {
+            if (!dateValue) return "";
+            
+            // Handle Excel date serial numbers
+            if (typeof dateValue === 'number') {
+                const date = new Date((dateValue - 25569) * 86400 * 1000);
+                return date.toISOString().split('T')[0];
+            }
+            
+            // Handle date strings
+            if (typeof dateValue === 'string') {
+                const date = new Date(dateValue);
+                if (!isNaN(date.getTime())) {
+                    return date.toISOString().split('T')[0];
+                }
+            }
+            
+            return dateValue;
+        }
+
+        function formatDuration(durationValue) {
+            if (!durationValue) return "00:00:00";
+
+            if (typeof durationValue === 'number') {
+                const totalSeconds = Math.round(durationValue * 86400);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            // Handle string formats like "3:24" or "1:02:33"
+            if (typeof durationValue === 'string') {
+                const parts = durationValue.split(':').map(p => parseInt(p.trim(), 10));
+                if (parts.length === 2) {
+                    // MM:SS
+                    return `00:${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`;
+                } else if (parts.length === 3) {
+                    // HH:MM:SS
+                    return parts.map(p => String(p).padStart(2, '0')).join(':');
+                }
+            }
+
+            return "00:00:00"; // Fallback
+        }
+
+
+        function downloadResult() {
+            if (!processedWorkbook) return;
+            
+            try {
+                const wbout = XLSX.write(processedWorkbook, { bookType: 'xlsx', type: 'binary' });
+                
+                function s2ab(s) {
+                    const buf = new ArrayBuffer(s.length);
+                    const view = new Uint8Array(buf);
+                    for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                    return buf;
+                }
+                
+                const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `OpenPlay_Import_Template_FIXED_${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+            } catch (error) {
+                alert('Error downloading file: ' + error.message);
+            }
+        }
+	
+    </script>
+</body>
+</html>
