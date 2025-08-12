@@ -1575,12 +1575,7 @@ function populateContributionsSheetsFixed(uniqueTracks) {
         if (typeWords.some(word => productionKeywords.some(keyword => word.includes(keyword)))) {
             return { role: 'Production & Engineering', type: contributorType };
         }
-        
-        // Check for mixing/mastering keywords (these go to 'Other')
-        const otherKeywords = ['mix', 'master', 'arrange', 'program', 'conduct'];
-        if (typeWords.some(word => otherKeywords.some(keyword => word.includes(keyword)))) {
-            return { role: 'Other', type: contributorType };
-        }
+    
         
         // Default fallback to 'Other'
         return { role: 'Other', type: contributorType };
