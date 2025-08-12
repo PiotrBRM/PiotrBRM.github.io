@@ -1473,13 +1473,26 @@ function populateContributionsSheetsFixed(uniqueTracks) {
     function createOpenPlayRoleMapping() {
         return {
             // Production & Engineering
-            'Producer': { role: 'Production & Engineering', type: 'Producer' },
+            'Assistant Mastering Engineer': { role: 'Production & Engineering', type: 'Assistant Mastering Engineer' },
+			'Assistant Mixing Engineer': { role: 'Production & Engineering', type: 'Assistant Mixing Engineer' },
+            'Assistant Producer': { role: 'Production & Engineering', type: 'Assistant Producer' },
+			'Assistant Recording Engineer': { role: 'Production & Engineering', type: 'Assistant Recording Engineer' },
+            'Camera Operator': { role: 'Production & Engineering', type: 'Camera Operator' },
             'Co-Producer': { role: 'Production & Engineering', type: 'Co-Producer' },
+            'Creative Director': { role: 'Production & Engineering', type: 'Creative Director' },
+            'Engineer': { role: 'Production & Engineering', type: 'Engineer' },
             'Executive Producer': { role: 'Production & Engineering', type: 'Executive Producer' },
-            'Recording Engineer': { role: 'Production & Engineering', type: 'Recording Engineer' },
-            'Engineer': { role: 'Production & Engineering', type: 'Recording Engineer' },
-            'Audio Engineer': { role: 'Production & Engineering', type: 'Recording Engineer' },
-            'Assistant Engineer': { role: 'Production & Engineering', type: 'Assistant Engineer' },
+			'Mastering Engineer': { role: 'Production & Engineering', type: 'Mastering Engineer' },
+			'Mixing Engineer': { role: 'Production & Engineering', type: 'Mixing Engineer' },
+			'Producer': { role: 'Production & Engineering', type: 'Producer' },
+			'Recording Engineer': { role: 'Production & Engineering', type: 'Recording Engineer' },
+			'Set Designer': { role: 'Production & Engineering', type: 'Set Designer' },
+			'Special Effects': { role: 'Production & Engineering', type: 'Special Effects' },
+			'Studio Personnel': { role: 'Production & Engineering', type: 'Studio Personnel' },
+			'Tonmeister': { role: 'Production & Engineering', type: 'Tonmeister' },
+			'Video Director': { role: 'Production & Engineering', type: 'Video Director' },
+			'Video Producer': { role: 'Production & Engineering', type: 'Video Producer' },
+			'Vocal Producer': { role: 'Production & Engineering', type: 'Vocal Producer' },
             
             // Instruments - Vocals
             'Vocals': { role: 'Instrument', type: 'Vocals' },
@@ -1522,15 +1535,12 @@ function populateContributionsSheetsFixed(uniqueTracks) {
             
             // Other Category
             'Mixer': { role: 'Other', type: 'Mixer' },
-            'Mix Engineer': { role: 'Other', type: 'Mix Engineer' },
-            'Mixing Engineer': { role: 'Other', type: 'Mix Engineer' },
-            'Mastering Engineer': { role: 'Other', type: 'Mastering Engineer' },
-            'Mastered By': { role: 'Other', type: 'Mastering Engineer' },
-            'Arranger': { role: 'Other', type: 'Arranger' },
-            'Conductor': { role: 'Other', type: 'Conductor' },
-            'Programming': { role: 'Other', type: 'Programming' },
-            'Programmer': { role: 'Other', type: 'Programmer' },
-            'Remixer': { role: 'Other', type: 'Remixer' }
+			'Performer': { role: 'Other', type: 'Performer' },
+			'Production Assistant': { role: 'Other', type: 'Production Assistant' },
+			'Programmer': { role: 'Other', type: 'Programmer' },
+			'Vocal Engineer': { role: 'Other', type: 'Vocal Engineer' },
+			'Assistant Sound Engineer': { role: 'Other', type: 'Assistant Sound Engineer' },
+
         };
     }
     
