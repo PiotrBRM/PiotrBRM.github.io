@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fixed OpenPlay Import Template Converter</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Add this CSS to your existing <style> section -->
-<!-- Add this CSS to your existing <style> section -->
 
-<!-- Add this CSS to your existing <style> section -->
 <style>
 /* Splash Screen Styles */
 .splash-screen {
@@ -17,7 +14,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 100%);
+    background: linear-gradient(135deg, #FFFFFF 0%, #f8faff 100%);
     background-size: 400% 400%;
     animation: gradientShift 2.5s ease-in-out infinite;
     display: flex;
@@ -39,7 +36,7 @@
     opacity: 0;
     transform: scale(0.8) translateY(20px);
     animation: logoEntrance 2s ease-out forwards;
-    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 10px 30px rgba(25, 57, 138, 0.3));
 }
 
 @keyframes gradientShift {
@@ -77,7 +74,7 @@
     left: 50%;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(25, 57, 138, 0.1);
     border-radius: 50%;
     transform: translate(-50%, -50%) scale(0);
     animation: pulse 2s ease-out infinite;
@@ -101,18 +98,714 @@
     transition: opacity 0.8s ease-out, transform 0.8s ease-out;
 }
 
+/* Logo styling */
+.header-logo {
+    max-width: 180px;
+    max-height: 60px;
+    width: auto;
+    height: auto;
+    margin-bottom: 20px;
+    opacity: 0.95;
+    filter: brightness(1.1) contrast(1.05);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.header-logo:hover {
+    opacity: 1;
+    transform: scale(1.05);
+    filter: brightness(1.2) contrast(1.1);
+}
+
+.header h1 {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+}
+
+.header p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 1;
+    font-weight: 400;
+}
+
 .container.show {
     opacity: 1;
     transform: translateY(0);
 }
-</style>
 
-<!-- Add this HTML right after the opening <body> tag -->
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #19398a 0%, #1e40af 25%, #2563eb 75%, #3b82f6 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    min-height: 100vh;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Animated Background Elements - Tech Grid Style */
+.bg-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* Animated Grid Lines */
+.grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 50px 50px;
+
+}
+
+@keyframes gridMove {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(50px, 50px);
+    }
+}
+
+/* Flowing Lines */
+.data-flow {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 20%, 
+        rgba(255, 255, 255, 0.6) 50%, 
+        rgba(255, 255, 255, 0.3) 80%, 
+        transparent 100%);
+    animation: dataFlow linear infinite;
+}
+
+.data-flow:nth-child(8) {
+    top: 20%;
+    left: -100%;
+    width: 200px;
+    animation-duration: 16s;
+    animation-delay: 0s;
+}
+
+.data-flow:nth-child(9) {
+    top: 40%;
+    left: -100%;
+    width: 150px;
+    animation-duration: 12s;
+    animation-delay: -4s;
+}
+
+.data-flow:nth-child(10) {
+    top: 65%;
+    left: -100%;
+    width: 180px;
+    animation-duration: 14s;
+    animation-delay: -8s;
+}
+
+.data-flow:nth-child(11) {
+    top: 80%;
+    left: -100%;
+    width: 120px;
+    animation-duration: 18s;
+    animation-delay: -2s;
+}
+
+@keyframes dataFlow {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Subtle Geometric Accents */
+.tech-accent {
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: techFloat ease-in-out infinite;
+}
+
+.tech-accent:nth-child(12) {
+    top: 10%;
+    right: 15%;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    animation-duration: 6s;
+    animation-delay: 0s;
+}
+
+.tech-accent:nth-child(13) {
+    top: 55%;
+    right: 25%;
+    width: 30px;
+    height: 30px;
+    transform: rotate(45deg);
+    animation-duration: 8s;
+    animation-delay: -3s;
+}
+
+.tech-accent:nth-child(14) {
+    top: 30%;
+    left: 10%;
+    width: 35px;
+    height: 20px;
+    border-radius: 20px;
+    animation-duration: 7s;
+    animation-delay: -1.5s;
+}
+
+@keyframes techFloat {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.1;
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+        opacity: 0.3;
+    }
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: 
+        0 25px 50px rgba(25, 57, 138, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    animation: fadeInUp 0.8s ease-out;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header {
+    background: linear-gradient(135deg, #19398a 0%, #1e40af 30%, #2563eb 70%, #3b82f6 100%);
+    color: white;
+    padding: 50px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+    animation: patternMove 20s linear infinite;
+}
+
+@keyframes patternMove {
+    0% { transform: translateX(0) translateY(0); }
+    100% { transform: translateX(60px) translateY(60px); }
+}
+
+.header h1 {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+}
+
+.header p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 1;
+    font-weight: 400;
+}
+
+.main-content {
+    padding: 50px 40px;
+}
+
+.step {
+    margin-bottom: 50px;
+    padding: 40px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 
+        0 10px 25px rgba(25, 57, 138, 0.08),
+        0 1px 3px rgba(25, 57, 138, 0.15);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.step::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #19398a, #1e40af, #2563eb, #3b82f6);
+}
+
+.step:hover {
+    transform: translateY(-8px);
+    box-shadow: 
+        0 25px 50px rgba(25, 57, 138, 0.15),
+        0 10px 20px rgba(25, 57, 138, 0.1);
+}
+
+.step h2 {
+    color: #1e293b;
+    margin-bottom: 16px;
+    font-size: 1.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.step p {
+    color: #475569;
+    margin-bottom: 24px;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* Fix for button click issues */
+.file-upload {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    margin-bottom: 24px;
+}
+
+.file-upload input[type=file] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.upload-button {
+    display: inline-block;
+    padding: 18px 36px;
+    background: linear-gradient(135deg, #19398a 0%, #1e40af 30%, #2563eb 70%, #3b82f6 100%);
+    color: white;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
+    box-shadow: 
+        0 10px 25px rgba(25, 57, 138, 0.4),
+        0 4px 12px rgba(25, 57, 138, 0.3);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.upload-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+    pointer-events: none;
+}
+
+.file-upload:hover .upload-button::before {
+    left: 100%;
+}
+
+.file-upload:hover .upload-button {
+    transform: translateY(-3px);
+    box-shadow: 
+        0 20px 40px rgba(25, 57, 138, 0.5),
+        0 10px 20px rgba(25, 57, 138, 0.4);
+}
+
+.process-button {
+    background: linear-gradient(135deg, #19398a 0%, #1e40af 30%, #2563eb 70%, #3b82f6 100%);
+    color: white;
+    border: none;
+    padding: 18px 48px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 24px;
+    box-shadow: 
+        0 10px 25px rgba(25, 57, 138, 0.4),
+        0 4px 12px rgba(25, 57, 138, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.process-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+    pointer-events: none;
+}
+
+.process-button:hover::before {
+    left: 100%;
+}
+
+.process-button:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 
+        0 20px 40px rgba(25, 57, 138, 0.5),
+        0 10px 20px rgba(25, 57, 138, 0.4);
+}
+
+.process-button:disabled {
+    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.download-button {
+    background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+    color: #19398a;
+    border: 2px solid #19398a;
+    padding: 18px 48px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 24px;
+    box-shadow: 
+        0 10px 25px rgba(25, 57, 138, 0.15),
+        0 4px 12px rgba(25, 57, 138, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.download-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(25, 57, 138, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.download-button:hover::before {
+    left: 100%;
+}
+
+.download-button:hover {
+    transform: translateY(-3px);
+    background: linear-gradient(135deg, #19398a 0%, #1e40af 100%);
+    color: white;
+    box-shadow: 
+        0 20px 40px rgba(25, 57, 138, 0.4),
+        0 10px 20px rgba(25, 57, 138, 0.3);
+}
+
+.status {
+    margin-top: 24px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.status.success {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    color: #19398a;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.status.error {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #dc2626;
+    border: 2px solid #f87171;
+    box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2);
+}
+
+.status.info {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    color: #1e40af;
+    border: 2px solid #60a5fa;
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+}
+
+.preview {
+    background: white;
+    border: 2px solid #e0f2fe;
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: 
+        inset 0 2px 8px rgba(25, 57, 138, 0.05),
+        0 4px 12px rgba(25, 57, 138, 0.08);
+}
+
+.preview table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.preview th, .preview td {
+    border: 1px solid #e0f2fe;
+    padding: 12px;
+    text-align: left;
+}
+
+.preview th {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    font-weight: 600;
+    color: #1e40af;
+}
+
+.preview tr:nth-child(even) {
+    background: #f8faff;
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    margin: 32px 0;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    border: 4px solid #e0f2fe;
+    border-top: 4px solid #19398a;
+    border-radius: 50%;
+    animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading p {
+    color: #475569;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.fixes {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid #3b82f6;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    animation: slideIn 0.5s ease-out;
+}
+
+.fixes h3 {
+    color: #1e40af;
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.fixes ul {
+    color: #1e40af;
+    margin-left: 20px;
+}
+
+.fixes li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .container {
+        margin: 10px;
+        border-radius: 20px;
+    }
+    
+    .main-content {
+        padding: 30px 20px;
+    }
+    
+    .step {
+        padding: 30px 20px;
+        margin-bottom: 30px;
+    }
+    
+    .header {
+        padding: 40px 20px;
+    }
+    
+    .header h1 {
+        font-size: 2.5rem;
+    }
+}
+</style>
+</head>
+<body>
+<!-- Animated Background -->
+<div class="bg-animation">
+    <div class="grid-overlay"></div>
+    
+    <!-- Data Flow Lines -->
+    <div class="data-flow"></div>
+    <div class="data-flow"></div>
+    <div class="data-flow"></div>
+    <div class="data-flow"></div>
+    
+    <!-- Tech Accents -->
+    <div class="tech-accent"></div>
+    <div class="tech-accent"></div>
+    <div class="tech-accent"></div>
+</div>
+
+<!-- Splash Screen -->
 <div id="splashScreen" class="splash-screen">
     <img src="https://i.imgur.com/VIGeC2U.png" alt="Logo" class="splash-logo" id="splashLogo">
 </div>
 
-<!-- Add this JavaScript at the end of your existing script, before the closing </script> tag -->
+<div class="container">
+    <div class="header">
+        <img src="https://imgur.com/IrfRmga.png" alt="Company Logo" class="header-logo">
+        <h1>OpenPlay Import Converter</h1>
+        <p>Automatically convert Label Copy spreadsheets to OpenPlay Import Templates</p>
+    </div>
+    
+    <div class="main-content">
+       
+        <div class="step">
+            <h2>Step 1: Upload Label Copy File</h2>
+            <p>Upload your Label Copy Excel file (.xlsx) containing the music release information.</p>
+            <div class="file-upload">
+                <input type="file" id="labelCopyInput" accept=".xlsx,.xls" />
+                <div class="upload-button">Choose Label Copy File</div>
+            </div>
+            <div id="labelCopyStatus"></div>
+            <div id="labelCopyPreview" class="preview" style="display: none;"></div>
+        </div>
+        
+        <div class="step">
+            <h2>Step 2: Upload OpenPlay Template</h2>
+            <p>Upload your empty OpenPlay Import Template (.xlsx) to be populated with the label copy data.</p>
+            <div class="file-upload">
+                <input type="file" id="templateInput" accept=".xlsx,.xls" />
+                <div class="upload-button">Choose OpenPlay Template</div>
+            </div>
+            <div id="templateStatus"></div>
+        </div>
+        
+        <div class="step">
+            <h2>Step 3: Process & Convert</h2>
+            <p>Process the label copy data and generate the populated OpenPlay import template.</p>
+            <button id="processButton" class="process-button" disabled>Process Files</button>
+            
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p>Processing files...</p>
+            </div>
+            
+            <div id="processStatus"></div>
+        </div>
+        
+        <div class="step">
+            <h2>Step 4: Download Result</h2>
+            <p>Download your populated OpenPlay Import Template ready for upload to the system.</p>
+            <button id="downloadButton" class="download-button" style="display: none;">📥 Download Fixed Template</button>
+        </div>
+    </div>
+</div>
+
 <script>
 // Splash screen functionality
 document.addEventListener('DOMContentLoaded', function() {
@@ -134,6 +827,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 200);
     }, 2000);
 });
+
 </script>
 
 	<style>
