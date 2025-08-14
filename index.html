@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
+	
 /* Splash Screen Styles */
 .splash-screen {
     position: fixed;
@@ -949,7 +950,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 populateOpenPlayTemplateFixed();
                 
                 document.getElementById('processStatus').innerHTML = 
-                    `<div class="status success">✅ Processing completed successfully! All issues have been fixed. Template populated with ${getUniqueTrackCount()} unique tracks.</div>`;
+                    `<div class="status success">✅ Processing completed successfully! Template populated with ${getUniqueTrackCount()} unique tracks.</div>`;
                 
                 document.getElementById('downloadButton').style.display = 'inline-block';
                 
