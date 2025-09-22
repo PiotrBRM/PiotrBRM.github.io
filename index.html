@@ -830,14 +830,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-</script>
+        </script>
         
 
     <script>
         let labelCopyData = null;
         let templateWorkbook = null;
         let processedWorkbook = null;
-		let columnMapping = null;
+        let columnMapping = null;
+        let templateStructure = null;
 
         // File upload handlers
         document.getElementById('labelCopyInput').addEventListener('change', handleLabelCopyUpload);
@@ -848,7 +849,6 @@ document.addEventListener('DOMContentLoaded', function() {
         function handleLabelCopyUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -856,57 +856,135 @@ document.addEventListener('DOMContentLoaded', function() {
                     const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
                     labelCopyData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
-                    
-                    document.getElementById('labelCopyStatus').innerHTML = 
+                   
+                    document.getElementById('labelCopyStatus').innerHTML =
                         `<div class="status success">✅ Label Copy loaded successfully! Found ${labelCopyData.length} rows of data.</div>`;
-                    
+                   
                     showLabelCopyPreview();
                     checkReadyToProcess();
                 } catch (error) {
-                    document.getElementById('labelCopyStatus').innerHTML = 
+                    document.getElementById('labelCopyStatus').innerHTML =
                         `<div class="status error">❌ Error reading file: ${error.message}</div>`;
                 }
             };
-			
-
-
-			
+           
             reader.readAsBinaryString(file);
         }
 
         function handleTemplateUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     templateWorkbook = XLSX.read(e.target.result, { type: 'binary' });
-                    document.getElementById('templateStatus').innerHTML = 
+                   
+                    // Analyze template structure for future-proofing
+                    templateStructure = analyzeTemplateStructure(templateWorkbook);
+                   
+                    document.getElementById('templateStatus').innerHTML =
                         `<div class="status success">✅ OpenPlay template loaded successfully! Found ${templateWorkbook.SheetNames.length} sheets.</div>`;
-                    
+                   
                     checkReadyToProcess();
                 } catch (error) {
-                    document.getElementById('templateStatus').innerHTML = 
+                    document.getElementById('templateStatus').innerHTML =
                         `<div class="status error">❌ Error reading template: ${error.message}</div>`;
                 }
             };
             reader.readAsBinaryString(file);
         }
 
+        /* REPLACE existing analyzeTemplateStructure(...) WITH THIS */
+        function analyzeTemplateStructure(workbook) {
+            const structure = {
+                sheets: {},
+                version: 'unknown',
+                headerRows: {}
+            };
+
+            // tokens that indicate header-like cells (lowercase)
+            const headerTokens = [
+                'artist', 'artist name', 'ipi', 'publisher', 'publisher id',
+                'track', 'track id', 'album', 'album id', 'title', 'isrc', 'work', 'name', 'id'
+            ];
+
+            workbook.SheetNames.forEach(sheetName => {
+                const sheet = workbook.Sheets[sheetName];
+                const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+
+                let headerRow = -1;
+                let bestScore = 0;
+                let firstNonEmpty = -1;
+                let maxNonEmptyCount = 0;
+
+                const rowsToScan = Math.min(20, data.length || 20);
+                for (let i = 0; i < rowsToScan; i++) {
+                    const row = data[i] || [];
+                    const rowStrings = row.map(cell => (cell === null || cell === undefined) ? '' : String(cell).toLowerCase());
+                    const nonEmptyCount = rowStrings.filter(s => s && s.trim()).length;
+
+                    if (nonEmptyCount > 0 && firstNonEmpty === -1) firstNonEmpty = i;
+                    if (nonEmptyCount > maxNonEmptyCount) maxNonEmptyCount = nonEmptyCount;
+
+                    // score this row by header token matches
+                    let score = 0;
+                    for (const cellText of rowStrings) {
+                        for (const tk of headerTokens) {
+                            if (cellText.includes(tk)) score += 1;
+                        }
+                    }
+
+                    // prefer rows with higher score, and prefer higher nonEmptyCount as tie-breaker
+                    if (score > bestScore || (score === bestScore && nonEmptyCount > (data[headerRow] || []).filter(Boolean).length)) {
+                        bestScore = score;
+                        headerRow = i;
+                    }
+                }
+
+                // Fallback: if we found no token matches, take first non-empty row (if any)
+                if (headerRow === -1) {
+                    headerRow = (firstNonEmpty !== -1) ? firstNonEmpty : 0;
+                }
+
+                structure.sheets[sheetName] = {
+                    exists: true,
+                    headerRow: headerRow,
+                    headers: data[headerRow] || [],
+                    totalRows: data.length,
+                    dataStartRow: headerRow + 2,
+                    rawData: data
+                };
+                structure.headerRows[sheetName] = headerRow;
+            });
+
+            // detect version as before
+            if (workbook.SheetNames.includes('MapPublisherToWork') &&
+                workbook.SheetNames.includes('AlbumPrimaryContributions')) {
+                structure.version = 'v2024_new';
+            } else if (workbook.SheetNames.includes('Publishers')) {
+                structure.version = 'v2024_old';
+            } else {
+                structure.version = 'legacy';
+            }
+
+            console.log('Template structure analyzed:', structure);
+            return structure;
+        }
+
+
         function showLabelCopyPreview() {
             if (!labelCopyData || labelCopyData.length < 2) return;
-            
+           
             const preview = document.getElementById('labelCopyPreview');
             let html = '<h3>Preview of Label Copy Data:</h3><table>';
-            
+           
             // Show headers
             html += '<tr>';
             labelCopyData[1].slice(0, 10).forEach(header => {
                 html += `<th>${header || 'Empty'}</th>`;
             });
             html += '<th>...</th></tr>';
-            
+           
             // Show first few data rows
             for (let i = 4; i < Math.min(labelCopyData.length, 8); i++) {
                 html += '<tr>';
@@ -915,7 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 html += '<td>...</td></tr>';
             }
-            
+           
             html += '</table>';
             preview.innerHTML = html;
             preview.style.display = 'block';
@@ -930,32 +1008,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function processFiles() {
             if (!labelCopyData || !templateWorkbook) return;
-            
+           
             document.getElementById('loadingIndicator').style.display = 'block';
             document.getElementById('processButton').disabled = true;
-            
+           
             try {
                 // Clone the template workbook
                 processedWorkbook = XLSX.utils.book_new();
-                
+               
                 // Copy all sheets from template
                 templateWorkbook.SheetNames.forEach(sheetName => {
                     const originalSheet = templateWorkbook.Sheets[sheetName];
                     const originalData = XLSX.utils.sheet_to_json(originalSheet, { header: 1, defval: "" });
-					const newSheet = XLSX.utils.aoa_to_sheet(originalData);
+                    const newSheet = XLSX.utils.aoa_to_sheet(originalData);
                     XLSX.utils.book_append_sheet(processedWorkbook, newSheet, sheetName);
                 });
-
-                // Process the data with fixes
-                populateOpenPlayTemplateFixed();
-                
-                document.getElementById('processStatus').innerHTML = 
+                // Process the data with the new future-proof approach
+                populateTemplateUniversal();
+               
+                document.getElementById('processStatus').innerHTML =
                     `<div class="status success">✅ Processing completed successfully! Template populated with ${getUniqueTrackCount()} unique tracks.</div>`;
-                
+               
                 document.getElementById('downloadButton').style.display = 'inline-block';
-                
+               
             } catch (error) {
-                document.getElementById('processStatus').innerHTML = 
+                document.getElementById('processStatus').innerHTML =
                     `<div class="status error">❌ Error processing files: ${error.message}</div>`;
                 console.error('Processing error:', error);
             } finally {
@@ -963,523 +1040,455 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-		function getUniqueTrackCount() {
-			if (!columnMapping || columnMapping.isrcCode === -1) return 0;
+        function getUniqueTrackCount() {
+            if (!columnMapping || columnMapping.isrcCode === -1) return 0;
+            const dataRows = labelCopyData.slice(4);
+            const uniqueISRCs = new Set();
+            dataRows.forEach(row => {
+                const isrc = row[columnMapping.isrcCode];
+                if (isrc && isrc.trim()) {
+                    uniqueISRCs.add(isrc.trim());
+                }
+            });
+            return uniqueISRCs.size;
+        }
 
-			const dataRows = labelCopyData.slice(4); // since you said row 4 always has track data
-			const uniqueISRCs = new Set();
+        function createColumnMapping(headerRow) {
+            const mapping = {};
+            const columnDefinitions = {
+                'recordLabel': ['Record Label', 'Label'],
+                'productTitle': ['Product Title', 'Album Title', 'Album'],
+                'productPrimaryArtist': ['Product Primary Artist', 'Album Artist', 'Primary Artist'],
+                'barcode': ['Barcode/UPC', 'UPC', 'Barcode', 'EAN'],
+                'catalogueNumber': ['Catalogue Number', 'Catalog Number', 'Cat No'],
+                'format': ['Format'],
+                'productType': ['Product Type'],
+                'productPYear': ['Product (P) Year', 'P Year', 'P-Year', 'pline year'],
+                'productPHolder': ['Product (P) Holder', 'P Holder', 'P-Holder', 'pline owner'],
+                'productCYear': ['Product (C) Year', 'C Year', 'C-Year', 'cline year'],
+                'productCHolder': ['Product (C) Holder', 'C Holder', 'C-Holder', 'cline owner'],
+                'releaseDate': ['Release Date', 'Date'],
+                'productGenre': ['Product Genre', 'Genre', 'Primary Genre'],
+                'volumeNo': ['Volume No.', 'Volume', 'Disc No.', 'Disc Number'],
+                'sides': ['Sides (if vinyl)', 'Sides', 'Side'],
+                'trackNo': ['Track No.', 'Track Number', '#', 'Track Seq'],
+                'trackPrimaryArtist': ['Track Primary Artist', 'Artist', 'Track Artist', 'Primary Artist'],
+                'trackMainTitle': ['Track Main Title', 'Song Title', 'Track Title', 'Main Title', 'Title'],
+                'trackTitleVersion': ['Track Title Version', 'Version', 'Mix'],
+                'trackPYear': ['Track (P) Year', 'Track P Year'],
+                'trackPHolder': ['Track (P) Holder', 'Track P Holder'],
+                'trackCYear': ['Track (C) Year', 'Track C Year'],
+                'trackCHolder': ['Track (C) Holder', 'Track C Holder'],
+                'isrcCode': ['ISRC Code', 'ISRC', 'isrc code', 'Isrc Code', 'ISRC CODE', 'isrc_code'],
+                'trackDuration': ['Track Duration', 'Duration', 'Length', 'Time'],
+                'trackLanguage': ['Audio Language', 'Language', 'Track Language'],
+                'individualPerformer': ['Individual Performer', 'Performer', 'Musicians', 'Performers'],
+                'performerInstrumentRole': ['Performer Instrument Role', 'Instrument', 'Role', 'Instrument Role'],
+                'producer': ['Producer', 'Produced By'],
+                'recordingEngineer': ['Recording Engineer', 'Engineer', 'Recorded By'],
+                'mixer': ['Mixer', 'Mixed By'],
+                'mixEngineer': ['Mix Engineer', 'Mixing Engineer'],
+                'mixedAt': ['Mixed At', 'Mix Location', 'Mixed @'],
+                'recordedAt': ['Recorded At', 'Recording Location', 'Recorded @'],
+                'sampleInfo': ['Sample Info', 'Samples'],
+                'masteringEngineer': ['Mastering Engineer', 'Mastered By'],
+                'masteredAt': ['Mastered At', 'Mastering Location', 'Mastered @'],
+                'writer': ['Writer / Composer', 'Writer', 'Composer', 'Written By'],
+                'publisher': ['Publisher', 'Published By']
+            };
+            // Enhanced search with fuzzy matching
+            Object.keys(columnDefinitions).forEach(key => {
+                const searchTerms = columnDefinitions[key];
+                let foundIndex = -1;
+               
+                // Exact match first
+                for (const term of searchTerms) {
+                    foundIndex = headerRow.findIndex(header =>
+                        String(header).toLowerCase().trim() === term.toLowerCase()
+                    );
+                    if (foundIndex !== -1) break;
+                }
+               
+                // Fuzzy match if exact not found
+                if (foundIndex === -1) {
+                    for (const term of searchTerms) {
+                        foundIndex = headerRow.findIndex(header =>
+                            String(header).toLowerCase().includes(term.toLowerCase().split(' ')[0])
+                        );
+                        if (foundIndex !== -1) break;
+                    }
+                }
+               
+                mapping[key] = foundIndex;
+            });
+            return mapping;
+        }
 
-			dataRows.forEach(row => {
-				const isrc = row[columnMapping.isrcCode]; // ✅ NOT cols
-				if (isrc && isrc.trim()) {
-					uniqueISRCs.add(isrc.trim());
-				}
-			});
-
-			return uniqueISRCs.size;
-		}
-		function createColumnMapping(headerRow) {
-			const mapping = {};
-			const columnDefinitions = {
-				// Format: 'internalName': ['Primary Search Term', 'Fallback Term 1', 'Fallback Term 2']
-				'recordLabel': ['Record Label'],
-				'productTitle': ['Product Title', 'Album Title'],
-				'productPrimaryArtist': ['Product Primary Artist', 'Album Artist'],
-				'barcode': ['Barcode/UPC', 'UPC', 'Barcode'],
-				'catalogueNumber': ['Catalogue Number', 'Catalog Number'],
-				'format': ['Format'],
-				'productType': ['Product Type'],
-				'productPYear': ['Product (P) Year', 'P Year'],
-				'productPHolder': ['Product (P) Holder', 'P Holder'],
-				'productCYear': ['Product (C) Year', 'C Year'],
-				'productCHolder': ['Product (C) Holder', 'C Holder'],
-				'releaseDate': ['Release Date'],
-				'productGenre': ['Product Genre', 'Genre'],
-				'volumeNo': ['Volume No.', 'Volume', 'Disc No.'],
-				'sides': ['Sides (if vinyl)', 'Sides'],
-				'trackNo': ['Track No.', 'Track Number', '#'],
-				'trackPrimaryArtist': ['Track Primary Artist', 'Artist', 'Track Artist'],
-				'trackMainTitle': ['Track Main Title', 'Song Title', 'Track Title', 'Main Title'],
-				'trackTitleVersion': ['Track Title Version', 'Version'],
-				'trackPYear': ['Track (P) Year'],
-				'trackPHolder': ['Track (P) Holder'],
-				'trackCYear': ['Track (C) Year'],
-				'trackCHolder': ['Track (C) Holder'],
-				'isrcCode': ['ISRC Code', 'ISRC', 'isrc code', 'Isrc Code', 'ISRC CODE', 'isrc_code'],
-				'trackDuration': ['Track Duration', 'Duration', 'Length'],
-				'trackLanguage': ['Audio Language', 'Language'],
-				'individualPerformer': ['Individual Performer', 'Performer', 'Musicians'],
-				'performerInstrumentRole': ['Performer Instrument Role', 'Instrument', 'Role'],
-				'producer': ['Producer'],
-				'recordingEngineer': ['Recording Engineer', 'Engineer'],
-				'mixer': ['Mixer'],
-				'mixEngineer': ['Mix Engineer'],
-				'mixedAt': ['Mixed At', 'Mix Location'],
-				'recordedAt': ['Recorded At', 'Recording Location'],
-				'sampleInfo': ['Sample Info'],
-				'masteringEngineer': ['Mastering Engineer'],
-				'masteredAt': ['Mastered At', 'Mastering Location'],
-				'writer': ['Writer / Composer', 'Writer', 'Composer'],
-				'publisher': ['Publisher']
-			};
-
-			// Search for each column by trying different search terms
-			Object.keys(columnDefinitions).forEach(key => {
-				const searchTerms = columnDefinitions[key];
-				let foundIndex = -1;
-				
-				// Try each search term until we find a match
-				for (const term of searchTerms) {
-					foundIndex = headerRow.findIndex(header => 
-						String(header).toLowerCase().trim() === term.toLowerCase()
-					);
-					if (foundIndex !== -1) break; // Found it, stop searching
-				}
-				
-				mapping[key] = foundIndex; // Store the found index (or -1 if not found)
-			});
-
-			return mapping;
-		}
-		function populateOpenPlayTemplateFixed() {
-			    // Create dynamic column mapping based on header names FIRST
-			const cols = createColumnMapping(labelCopyData[1]);
-			columnMapping = cols;
-			// === ADD THIS DEBUGGING SECTION ===
-			console.log("=== DEBUGGING ALTERNATE FILE ===");
-			console.log("Total rows in file:", labelCopyData.length);
-			console.log("Header row (row 1):", labelCopyData[1]);
-			console.log("Column mapping found:", cols);
-			console.log("ISRC column index:", cols.isrcCode);
-			console.log("Sample ISRC values from first few rows:");
-			for (let i = 0; i < Math.min(10, labelCopyData.length); i++) {
-				console.log(`Row ${i}, ISRC column ${cols.isrcCode}:`, labelCopyData[i][cols.isrcCode]);
-			}
-			
-			// Check if data starts at row 4 or somewhere else
-			for (let i = 0; i < Math.min(10, labelCopyData.length); i++) {
-				const row = labelCopyData[i];
-				const hasTrackData = row[cols.isrcCode] || row[cols.trackMainTitle];
-				console.log(`Row ${i} - Has track data: ${!!hasTrackData}`, row.slice(0, 5));
-			}
-			
-			// Check specifically where the actual track data starts
-			const dataRows = labelCopyData.slice(4);
-			console.log("Data rows starting from row 4:", dataRows.length);
-			console.log("First data row:", dataRows[0]);
-			console.log("ISRC in first data row:", dataRows[0] ? dataRows[0][cols.isrcCode] : "No data");
-			console.log("Track title in first data row:", dataRows[0] ? dataRows[0][cols.trackMainTitle] : "No data");
-			// === END DEBUGGING SECTION ===
-			// Create dynamic column mapping based on header names FIRST			
-			// Validate that required columns were found
-			const requiredFields = ['isrcCode', 'trackMainTitle', 'trackPrimaryArtist', 'productTitle', 'barcode'];
-			const missingFields = requiredFields.filter(field => cols[field] === -1);
-
-			if (missingFields.length > 0) {
-				throw new Error(`Missing required columns: ${missingFields.join(', ')}. Please check your file format.`);
-			}
-
-			console.log('Successfully mapped columns:', cols);
-			
-			// Extract data from label copy            
-            // Column indices in label copy
-			// Create dynamic column mapping based on header names
-
-
-            // FIXED: Create unique tracks based on ISRC to avoid duplicates
+        function populateTemplateUniversal() {
+            // Create dynamic column mapping
+            const cols = createColumnMapping(labelCopyData[1]);
+            columnMapping = cols;
+           
+            console.log('Column mapping created:', cols);
+           
+            // Validate required columns
+            const requiredFields = ['isrcCode', 'trackMainTitle', 'trackPrimaryArtist'];
+            const missingFields = requiredFields.filter(field => cols[field] === -1);
+           
+            if (missingFields.length > 0) {
+                throw new Error(`Missing required columns: ${missingFields.join(', ')}. Please check your file format.`);
+            }
+           
+            // Extract data from label copy (assuming data starts at row 4)
+            const dataRows = labelCopyData.slice(4);
+           
+            // Create unique tracks map
             const uniqueTracks = new Map();
             const isrcToTrackId = new Map();
             let trackIdCounter = 1;
-            
-            // First pass: identify unique tracks by ISRC
-            // First pass: identify unique tracks by ISRC
-			dataRows.forEach((row, index) => {
-				const isrc = row[columnMapping.isrcCode];
-				const title = row[cols.trackMainTitle];
-				
-				// === REPLACE WITH THIS BETTER DEBUGGING ===
-				console.log(`Row ${index}:`, {
-					rowLength: row.length,
-					isrcColumnIndex: cols.isrcCode,
-					titleColumnIndex: cols.trackMainTitle,
-					isrcRawValue: isrc,
-					titleRawValue: title,
-					isrcType: typeof isrc,
-					titleType: typeof title,
-					isrcTrimmed: isrc ? String(isrc).trim() : 'null',
-					titleTrimmed: title ? String(title).trim() : 'null',
-					firstFewColumns: row.slice(0, 5),
-					isrcColumnValue: `Column ${cols.isrcCode}: "${row[cols.isrcCode]}"`,
-					titleColumnValue: `Column ${cols.trackMainTitle}: "${row[cols.trackMainTitle]}"`
-				});
-				// === END BETTER DEBUGGING ===
-				
-				if (isrc && isrc.trim() && title && title.trim()) {
-					// ... rest of existing code
-					if (!uniqueTracks.has(isrc)) {
-						// ... existing track creation code
+           
+            // Process unique tracks
+            dataRows.forEach((row, index) => {
+                const isrc = row[cols.isrcCode];
+                const title = row[cols.trackMainTitle];
+               
+                if (isrc && isrc.trim() && title && title.trim()) {
+                    if (!uniqueTracks.has(isrc)) {
                         const trackId = `TRACK${String(trackIdCounter).padStart(3, '0')}`;
-                        uniqueTracks.set(isrc, {
-                            trackId: trackId,
-                            title: title,
-                            artist: row[cols.trackPrimaryArtist],
-                            isrc: isrc,
-                            version: row[cols.trackTitleVersion],
-                            duration: row[cols.trackDuration],
-                            pYear: row[cols.trackPYear],
-                            pHolder: row[cols.trackPHolder],
-                            cYear: row[cols.trackCYear],
-                            cHolder: row[cols.trackCHolder],
-                            language: row[cols.trackLanguage],
-                            genre: row[cols.productGenre],
-                            label: row[cols.recordLabel],
-                            // Store all the mapping info for this track
-                            albumInfo: {
-                                title: row[cols.productTitle],
-                                barcode: row[cols.barcode],
-                                volume: row[cols.volumeNo],
-                                side: row[cols.sides],
-                                trackNo: row[cols.trackNo]
-                            },
-                            // Store contribution info
-                            performers: row[cols.individualPerformer],
-                            roles: row[cols.performerInstrumentRole],
-                            producer: row[cols.producer],
-                            engineer: row[cols.recordingEngineer],
-                            mixer: row[cols.mixer],
-                            mixEngineer: row[cols.mixEngineer],
-                            masteringEngineer: row[cols.masteringEngineer],
-                            writer: row[cols.writer],
-                            publisher: row[cols.publisher]
-                        });
+                        uniqueTracks.set(isrc, createTrackObject(row, cols, trackId));
                         isrcToTrackId.set(isrc, trackId);
                         trackIdCounter++;
                     }
                 }
             });
-
+           
             console.log(`Created ${uniqueTracks.size} unique tracks from ${dataRows.length} rows`);
-
-            // Populate all sheets with fixed logic
-            populateAlbumsSheetFixed(dataRows, cols);
-            populateTracksSheetFixed(uniqueTracks);
-            populateWorksSheetFixed(uniqueTracks);
-            populateArtistsSheetFixed(dataRows, cols, uniqueTracks);
-            populatePublishersSheetFixed(uniqueTracks);
-            populateMappingSheetsFixed(uniqueTracks, dataRows, cols);
-            populateContributionsSheetsFixed(uniqueTracks);
-			populateAlbumPrimaryContributionsFixed(dataRows, cols);
-			populateMapPublisherToWorkFixed(uniqueTracks);
+           
+            // Populate sheets based on template structure
+            populateSheetUniversal('Albums', createAlbumData(dataRows, cols));
+            populateSheetUniversal('Tracks', createTrackData(uniqueTracks));
+            populateSheetUniversal('Works', createWorkData(uniqueTracks));
+            populateSheetUniversal('Artists', createArtistData(dataRows, cols, uniqueTracks));
+           
+            // Handle new/old template differences
+            if (templateStructure.version === 'v2024_new') {
+                populateSheetUniversal('Publishers', createPublisherData(uniqueTracks));
+                populateSheetUniversal('MapPublisherToWork', createPublisherWorkMapping(uniqueTracks));
+                populateSheetUniversal('AlbumPrimaryContributions', createAlbumPrimaryContributions(dataRows, cols));
+            }
+           
+            // Universal mapping sheets
+            populateUniversalMappings(uniqueTracks, dataRows, cols);
+            populateUniversalContributions(uniqueTracks);
         }
-		
-		
-		function populateAlbumPrimaryContributionsFixed(dataRows, cols) {
-			const albumPrimarySheet = processedWorkbook.Sheets['AlbumPrimaryContributions'];
-			const albumPrimaryData = XLSX.utils.sheet_to_json(albumPrimarySheet, { header: 1, defval: "" });
-			
-			// Get unique albums with their primary artists
-			const albums = new Map();
-			dataRows.forEach(row => {
-				const albumTitle = row[cols.productTitle];
-				const barcode = row[cols.barcode];
-				const primaryArtist = row[cols.productPrimaryArtist];
-				
-				if (albumTitle && albumTitle.trim() && barcode && barcode.trim() && primaryArtist && primaryArtist.trim()) {
-					const albumKey = `${albumTitle}_${barcode}`;
-					if (!albums.has(albumKey)) {
-						albums.set(albumKey, {
-							title: albumTitle,
-							artist: primaryArtist,
-							barcode: barcode
-						});
-					}
-				}
-			});
 
-			let rowIndex = 4;
-			let albumIdCounter = 1;
-			albums.forEach((album, key) => {
-				const albumId = `ALBUM${String(albumIdCounter).padStart(3, '0')}`;
-				
-				// Ensure we have enough rows
-				while (albumPrimaryData.length <= rowIndex) {
-					albumPrimaryData.push([]);
-				}
-				
-				albumPrimaryData[rowIndex] = [
-					albumId, // ALBUM ID
-					album.artist, // ARTIST NAME
-					"" // FEATURED (empty for primary artists)
-				];
-				rowIndex++;
-				albumIdCounter++;
-			});
+        function createTrackObject(row, cols, trackId) {
+            return {
+                trackId: trackId,
+                title: row[cols.trackMainTitle] || '',
+                artist: row[cols.trackPrimaryArtist] || '',
+                isrc: row[cols.isrcCode] || '',
+                version: row[cols.trackTitleVersion] || '',
+                duration: row[cols.trackDuration] || '',
+                pYear: row[cols.trackPYear] || '',
+                pHolder: row[cols.trackPHolder] || '',
+                cYear: row[cols.trackCYear] || '',
+                cHolder: row[cols.trackCHolder] || '',
+                language: row[cols.trackLanguage] || 'English',
+                genre: row[cols.productGenre] || '',
+                label: row[cols.recordLabel] || '',
+                albumInfo: {
+                    title: row[cols.productTitle] || '',
+                    barcode: row[cols.barcode] || '',
+                    volume: row[cols.volumeNo] || 1,
+                    side: row[cols.sides] || '',
+                    trackNo: row[cols.trackNo] || ''
+                },
+                contributors: {
+                    performers: row[cols.individualPerformer] || '',
+                    roles: row[cols.performerInstrumentRole] || '',
+                    producer: row[cols.producer] || '',
+                    engineer: row[cols.recordingEngineer] || '',
+                    mixer: row[cols.mixer] || '',
+                    mixEngineer: row[cols.mixEngineer] || '',
+                    masteringEngineer: row[cols.masteringEngineer] || '',
+                    writer: row[cols.writer] || '',
+                    publisher: row[cols.publisher] || ''
+                }
+            };
+        }
 
-			processedWorkbook.Sheets['AlbumPrimaryContributions'] = XLSX.utils.aoa_to_sheet(albumPrimaryData);
-		}
-		
-		function populateMapPublisherToWorkFixed(uniqueTracks) {
-			const mapPubToWorkSheet = processedWorkbook.Sheets['MapPublisherToWork'];
-			const mapPubToWorkData = XLSX.utils.sheet_to_json(mapPubToWorkSheet, { header: 1, defval: "" });
-			
-			// Create publisher ID mapping
-			const publisherMap = new Map();
-			let publisherIdCounter = 1;
-			
-			// First pass: collect all unique publishers
-			uniqueTracks.forEach((track) => {
-				if (track.publisher && track.publisher.trim()) {
-					const publishers = track.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
-					publishers.forEach(publisher => {
-						if (!publisherMap.has(publisher)) {
-							publisherMap.set(publisher, `PUB${String(publisherIdCounter).padStart(3, '0')}`);
-							publisherIdCounter++;
-						}
-					});
-				}
-			});
+        /* REPLACE existing populateSheetUniversal(...) WITH THIS */
+        function populateSheetUniversal(sheetName, data) {
+            if (!templateStructure.sheets[sheetName] || !templateStructure.sheets[sheetName].exists) {
+                console.warn(`Sheet ${sheetName} not found in template`);
+                return;
+            }
 
-			let rowIndex = 4;
-			
-			// Map each work to its publishers
-			uniqueTracks.forEach((track, isrc) => {
-				const workId = track.trackId.replace('TRACK', 'WORK');
-				
-				if (track.publisher && track.publisher.trim()) {
-					const publishers = track.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
-					
-					publishers.forEach(publisher => {
-						const publisherId = publisherMap.get(publisher);
-						
-						if (publisherId) {
-							// Ensure we have enough rows
-							while (mapPubToWorkData.length <= rowIndex) {
-								mapPubToWorkData.push([]);
-							}
-							
-							mapPubToWorkData[rowIndex] = [
-								publisherId, // PUBLISHER ID
-								workId, // WORK ID
-								"", // RIGHTS ADMINISTRATOR
-								"", // AFFILIATION
-								"", // SPLIT PERCENTAGE
-								"worldwide", // TERRITORY
-								"" // TERRITORY RESTRICTIONS
-							];
-							rowIndex++;
-						}
-					});
-				}
-			});
+            const sheet = processedWorkbook.Sheets[sheetName];
+            // Read current sheet data (copied from original template earlier)
+            const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+            const structure = templateStructure.sheets[sheetName];
+            const startRow = structure.dataStartRow;
 
-			processedWorkbook.Sheets['MapPublisherToWork'] = XLSX.utils.aoa_to_sheet(mapPubToWorkData);
-		}
-		
-        function populateAlbumsSheetFixed(dataRows, cols) {
-            const albumsSheet = processedWorkbook.Sheets['Albums'];
-            const albumsData = XLSX.utils.sheet_to_json(albumsSheet, { header: 1, defval: "" });
-            
-            // FIXED: Get unique albums, filter out empty ones
+            // Preserve everything up to startRow (this keeps all header rows + any instructional rows)
+            const preservedRows = sheetData.slice(0, startRow);
+
+            // Build new data rows ensuring each row is at least as wide as template headers
+            const templateHeaders = structure.headers || [];
+            const newRows = data.map(rowData => {
+                const row = Array.isArray(rowData) ? rowData.slice() : (Array.from(rowData) || []);
+                // expand to match header length (avoid truncating header columns)
+                while (row.length < templateHeaders.length) row.push('');
+                return row;
+            });
+
+            // Recombine: preserved header rows + new data rows
+            const finalSheetData = preservedRows.concat(newRows);
+
+            // Write back to the processed workbook sheet
+            processedWorkbook.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(finalSheetData);
+        }
+
+
+        // Helper: get the machine header row (row 1) or fall back to the display header
+        function getMachineHeaders(sheetName) {
+            const s = templateStructure.sheets[sheetName];
+            if (!s) return [];
+            // Prefer rawData[0] (machine keys) if available, otherwise use the found header row
+            return (s.rawData && s.rawData[0]) ? s.rawData[0].map(h => String(h || '').trim()) :
+                (s.headers || []).map(h => String(h || '').trim());
+        }
+
+        // Helper: generic mapper that tries exact machine-key mapping first, then token matches
+        function valueForHeaderKey(headerKey, valueMap) {
+            const key = String(headerKey || '').toLowerCase();
+            if (!key) return '';
+            const k = key.replace(/[^a-z0-9]/g, '');
+
+            // --- Core IDs & Titles ---
+            if (key.includes('project_import_id')) return ''; // never populate Project IDs
+            if (key.includes('import_id')) return valueMap.import_id || '';
+            if (key === 'title' || key === 'name') return valueMap.title || '';
+            if (key.includes('import_display_title')) return valueMap.import_display_title || '';
+            if (key.includes('version') && key.includes('display')) return valueMap.import_version_display_title || '';
+            if (key.includes('version')) return valueMap.version || '';
+
+            // --- Config / Label / Identifiers ---
+            if (key.includes('configuration') || key === 'format' || key === 'configuration_code') return valueMap.configuration || valueMap.configuration_code || '';
+            if (key.includes('label') && key.includes('import')) return valueMap.import_label || '';
+            if (key.includes('display_label') || key.includes('marketing label')) return valueMap.display_label || '';
+            if (key.includes('upc') || key.includes('ean')) return valueMap.upc || valueMap.upc_number || '';
+            if (key.includes('release_number') || key.includes('catalog')) return valueMap.catalog || valueMap.release_number || '';
+
+            // --- Flags ---
+            if (key.includes('promotional')) return valueMap.promotional || '';
+            if (key.includes('box_set')) return valueMap.box_set || '';
+            if (key.includes('indie_exclusive')) return valueMap.indie_exclusive || '';
+            if (key.includes('is_reissue')) return valueMap.is_reissue || '';
+
+            // --- Genres ---
+            if (key.includes('primary_genre') && !key.includes('sub')) return valueMap.primary_genre_code || valueMap.genre || '';
+            if (key.includes('primary_sub_genre') || key.includes('sub_genre')) return valueMap.primary_sub_genre_code || valueMap.subGenre || '';
+
+            // --- Dates ---
+            if (key.includes('original_release_date')) return valueMap.original_release_date || valueMap.release_date || '';
+            if (key === 'release_date') return valueMap.release_date || '';
+
+            // --- P-Line ---
+            if (k.includes('plineyear') || key.includes('p-year') || key.includes('p_year'))
+                return valueMap.pline_year || valueMap.pYear || '';
+
+            if (k.includes('plineowner') || k.includes('pholder') || k.includes('powner'))
+                return valueMap.pline_owner || valueMap.pHolder || valueMap.p_owner || '';
+
+            // --- C-Line ---
+            if (k.includes('clineyear') || key.includes('c-year') || key.includes('c_year'))
+                return valueMap.cline_year || valueMap.cYear || '';
+
+            if (k.includes('clineowner') || k.includes('cholder') || k.includes('cowner'))
+                return valueMap.cline_owner || valueMap.cHolder || valueMap.c_owner || '';
+
+            // --- Recording dates ---
+            if (k.includes('recordingenddateyear'))
+                return valueMap.pline_year || valueMap.pYear || '';   // 👈 NEW RULE
+
+            // --- Languages ---
+            if (key.includes('audio_language')) return valueMap.audio_language || 'English';
+            if (key.includes('metadata_language_country')) return valueMap.metadata_language_country || 'United Kingdom';
+            if (key.includes('metadata_language')) return valueMap.metadata_language || 'English';
+
+            // --- Tracks ---
+            if (key.includes('isrc')) return valueMap.isrc || '';
+            if (key.includes('track_type')) return valueMap.track_type || '';
+            if (key.includes('video_type')) return valueMap.video_type || '';
+            if (key.includes('parental_advisory')) return valueMap.parental_advisory || '';
+            if (key.includes('length')) return valueMap.length || '';
+
+            // --- Misc ---
+            if (key.includes('keywords')) return valueMap.keywords || '';
+            if (key.includes('notes')) return valueMap.notes || '';
+
+            // --- Fallbacks ---
+            if (key.includes('genre')) return valueMap.genre || '';
+            if (key.includes('label')) return valueMap.label || '';
+            if (key.includes('artist')) return valueMap.artist || '';
+            if (key.includes('work')) return valueMap.work || '';
+
+            return '';
+        }
+
+        /* ----------- Albums ----------- */
+        function createAlbumData(dataRows, cols) {
             const albums = new Map();
+
             dataRows.forEach(row => {
                 const title = row[cols.productTitle];
                 const barcode = row[cols.barcode];
-                
-				console.log("Album check:", {
-					title: title,
-					barcode: barcode,
-					titleIndex: cols.productTitle,
-					barcodeIndex: cols.barcode
-				});
-				
-                // Only create album if both title and barcode are present and not empty
-                if (title && title.trim() && barcode && barcode.trim()) {
+                if (title && title.toString().trim() && barcode && barcode.toString().trim()) {
                     const albumKey = `${title}_${barcode}`;
                     if (!albums.has(albumKey)) {
                         albums.set(albumKey, {
                             title: title,
-                            artist: row[cols.productPrimaryArtist],
+                            artist: row[cols.productPrimaryArtist] || '',
                             upc: barcode,
-                            catalog: row[cols.catalogueNumber],
-                            format: row[cols.format],
-                            genre: row[cols.productGenre],
-                            releaseDate: formatDate(row[cols.releaseDate]),
-                            pYear: row[cols.productPYear],
-                            pHolder: row[cols.productPHolder],
-                            cYear: row[cols.productCYear],
-                            cHolder: row[cols.productCHolder],
-                            label: row[cols.recordLabel]
+                            catalog: row[cols.catalogueNumber] || '',
+                            format: row[cols.format] || 'Digital Album',
+                            genre: row[cols.productGenre] || '',
+                            releaseDate: formatDate(row[cols.releaseDate]) || '',
+                            pYear: row[cols.productPYear] || '',
+                            pHolder: row[cols.productPHolder] || '',
+                            cYear: row[cols.productCYear] || '',
+                            cHolder: row[cols.productCHolder] || '',
+                            label: row[cols.recordLabel] || ''
                         });
                     }
                 }
             });
 
-            // Add album data starting from row 4
-            let rowIndex = 4;
+            const albumData = [];
+            let albumIdCounter = 1;
+
+            const machineHeaders = getMachineHeaders('Albums');
+
             albums.forEach((album, key) => {
-                const albumId = `ALBUM${String(rowIndex - 3).padStart(3, '0')}`;
-                
-                // Ensure we have enough rows
-                while (albumsData.length <= rowIndex) {
-                    albumsData.push([]);
-                }
-                
-                albumsData[rowIndex] = [
-                    albumId, // import_id
-                    album.title, // title
-                    "", // import_display_title
-                    "Digital Album", // configuration_code
-                    "", // version
-                    "", // import_version_display_title
-                    album.label, // import_label
-                    "", // display_label
-                    "", // wmg_distribution_group_code
-                    album.upc, // upc_number
-                    "", // generate_upc
-                    album.catalog, // release_number
-                    "", // promotional
-                    "", // box_set
-                    "", // indie_exclusive
-                    album.genre, // primary_genre_code
-                    "", // primary_sub_genre_code
-                    album.releaseDate, // original_release_date
-                    album.releaseDate, // release_date
-                    "", // is_reissue
-                    "", // project_import_id
-                    "", // project_code
-                    "", // artist_type
-                    "", // compilation_type
-                    "", // artist_display_name_format
-                    "", // import_music_type
-                    "", // import_parental_advisory
-                    "", // video_type
-                    "", // video_release_year
-                    "", // video_production_company
-                    "", // audio_presentation
-                    "", // resolution_type
-                    "", // studio_code
-                    album.pYear, // pline_year
-                    album.pHolder, // pline_owner
-                    "", // pline_license
-                    album.cYear, // cline_year
-                    album.cHolder, // cline_owner
-                    "", // cline_license
-                    "", // keywords
-                    "", // effective_release_price_tier_code
-                    "", // effective_audio_track_price_tier_code
-                    "", // wmg_audio_language_code
-                    "English", // wmg_metadata_language_code
-                    "", // metadata_language_country_code
-                    "", // us_initial_ship_quantity
-                    ...Array(Math.max(0, (albumsData[0] || []).length - 44)).fill("")
-                ];
-                rowIndex++;
+                const albumId = `ALBUM${String(albumIdCounter).padStart(3, '0')}`;
+
+                // value map for token lookups
+                const v = {
+                    import_id: albumId,
+                    title: album.title,
+                    import_display_title: '',
+                    configuration: album.format,
+                    version: '',
+                    import_version_display_title: '',
+                    import_label: album.label,
+                    display_label: '',
+                    wmg_distribution_group_code: '',
+                    upc_number: album.upc,
+                    release_number: album.catalog,
+                    promotional: '',
+                    box_set: '',
+                    indie_exclusive: '',
+                    primary_genre_code: album.genre,
+                    primary_sub_genre_code: '',
+                    original_release_date: album.releaseDate,
+                    release_date: album.releaseDate,
+                    is_reissue: '',
+                    pline_year: album.pYear,
+                    pline_owner: album.pHolder || '',
+                    pHolder: album.pHolder || '',   // <-- add this
+                    cline_year: album.cYear,
+                    cline_owner: album.cHolder || '',
+                    cHolder: album.cHolder || '',   // <-- add this
+                    wmg_metadata_language_code: 'English',
+                    metadata_language_country_code: ''
+                };
+
+                // Build row by iterating template machine headers
+                const row = machineHeaders.map(h => valueForHeaderKey(h, v));
+                // If machineHeaders shorter than expected, ensure it's not empty cell length mismatch:
+                albumData.push(row);
+                albumIdCounter++;
             });
 
-            processedWorkbook.Sheets['Albums'] = XLSX.utils.aoa_to_sheet(albumsData);
+            return albumData;
         }
 
-        function populateTracksSheetFixed(uniqueTracks) {
-            const tracksSheet = processedWorkbook.Sheets['Tracks'];
-            const tracksData = XLSX.utils.sheet_to_json(tracksSheet, { header: 1, defval: "" });
-            
-            let rowIndex = 4;
+        /* ----------- Tracks ----------- */
+        function createTrackData(uniqueTracks) {
+            const trackData = [];
+            const machineHeaders = getMachineHeaders('Tracks');
+
             uniqueTracks.forEach((track, isrc) => {
                 const duration = formatDuration(track.duration);
-                
-                // Ensure we have enough rows
-                while (tracksData.length <= rowIndex) {
-                    tracksData.push([]);
-                }
-                
-                tracksData[rowIndex] = [
-                    track.trackId, // import_id
-                    track.title, // title
-                    "", // import_display_title
-                    track.isrc, // isrc
-                    "", // generate_isrc
-                    track.version || "", // version
-                    "", // import_version_display_title
-                    track.label, // import_label
-                    "", // wmg_distribution_group_code
-                    "Audio", // track_type
-                    "", // configuration
-                    "", // video_type
-                    "", // parental_advisory
-                    track.genre, // primary_genre_code
-                    "", // primary_sub_genre_code
-                    "", // import_music_type
-                    duration, // length
-                    "", // import_audio_hook
-                    "", // import_audio_sample_length
-                    track.pYear, // pline_year
-                    track.pHolder, // pline_owner
-                    "", // pline_license
-                    track.cYear, // cline_year
-                    track.cHolder, // cline_owner
-                    "", // cline_license
-                    "", // artist_type
-                    "", // artist_display_name_format
-                    track.language || "English", // wmg_audio_language_code
-                    "English", // wmg_metadata_language_code
-                    "", // metadata_language_country_code
-                    "", // audio_presentation_code
-                    "", // primary_recording_location_code
-                    "", // recording_locations_names
-                    "", // recording_end_date_year
-                    "", // session_type
-                    "", // performance_type_code
-                    "", // video_audio_isrc
-                    "", // video_category_code
-                    "", // video_release_year
-                    "", // video_production_company
-                    "", // keywords
-                    "" // notes
-                ];
-                rowIndex++;
+
+                const v = {
+                    import_id: track.trackId,
+                    title: track.title,
+                    import_display_title: '',
+                    isrc: track.isrc,
+                    version: track.version,
+                    import_version_display_title: '',
+                    import_label: track.label,
+                    wmg_distribution_group_code: '',
+                    track_type: 'Audio',
+                    configuration: '', // leave blank if not sure
+                    video_type: '',
+                    parental_advisory: '',
+                    primary_genre_code: track.genre,
+                    primary_sub_genre_code: '',
+                    import_music_type: '',
+                    length: duration,
+                    pline_year: track.pYear,
+                    pline_owner: track.pHolder,
+                    pHolder: track.pHolder,        // <-- add this
+                    cline_year: track.cYear,
+                    cline_owner: track.cHolder,
+                    cHolder: track.cHolder,        // <-- add this
+                    audio_language: 'English',
+                    audio_language: 'English',                 // ✅ always default English
+                    metadata_language: 'English',              // ✅ metadata language
+                    metadata_language_country: 'United Kingdom'// ✅ country fix
+
+                };
+
+                const row = machineHeaders.map(h => valueForHeaderKey(h, v));
+                trackData.push(row);
             });
 
-            processedWorkbook.Sheets['Tracks'] = XLSX.utils.aoa_to_sheet(tracksData);
+            return trackData;
         }
 
-        function populateWorksSheetFixed(uniqueTracks) {
-            const worksSheet = processedWorkbook.Sheets['Works'];
-            const worksData = XLSX.utils.sheet_to_json(worksSheet, { header: 1, defval: "" });
-            
-            let rowIndex = 4;
+
+        function createWorkData(uniqueTracks) {
+            const workData = [];
+           
             uniqueTracks.forEach((track, isrc) => {
                 const workId = track.trackId.replace('TRACK', 'WORK');
-                
-                // Ensure we have enough rows
-                while (worksData.length <= rowIndex) {
-                    worksData.push([]);
-                }
-                
-                worksData[rowIndex] = [
+               
+                const workRow = [
                     workId, // import_id
                     track.title, // title
-                    "Pop", // import_music_type
-                    "", // iswc
-                    "", // label_work_code
-                    "", // copyright_year
-                    "English", // wmg_language_code
-                    "", // agency
-                    "" // description
+                    'Pop', // import_music_type
+                    '', // iswc
+                    '', // label_work_code
+                    '', // copyright_year
+                    'English', // wmg_language_code
+                    '', // agency
+                    '' // description
                 ];
-                rowIndex++;
+               
+                workData.push(workRow);
             });
-
-            processedWorkbook.Sheets['Works'] = XLSX.utils.aoa_to_sheet(worksData);
+           
+            return workData;
         }
 
-        function populateArtistsSheetFixed(dataRows, cols, uniqueTracks) {
-            const artistsSheet = processedWorkbook.Sheets['Artists'];
-            const artistsData = XLSX.utils.sheet_to_json(artistsSheet, { header: 1, defval: "" });
-            
-            // Get unique artists
+        function createArtistData(dataRows, cols, uniqueTracks) {
             const artists = new Set();
-            
-            // Add primary artists from albums and tracks
+           
+            // Add primary artists
             dataRows.forEach(row => {
                 if (row[cols.productPrimaryArtist] && row[cols.productPrimaryArtist].trim()) {
                     artists.add(row[cols.productPrimaryArtist].trim());
@@ -1488,84 +1497,137 @@ document.addEventListener('DOMContentLoaded', function() {
                     artists.add(row[cols.trackPrimaryArtist].trim());
                 }
             });
-            
+           
             // Add contributors from unique tracks
             uniqueTracks.forEach((track) => {
-                // Split pipe-delimited performers
-                if (track.performers && track.performers.trim()) {
-                    const performerNames = track.performers.split('|').map(name => name.trim()).filter(name => name);
+                if (track.contributors.performers && track.contributors.performers.trim()) {
+                    const performerNames = track.contributors.performers.split('|').map(name => name.trim()).filter(name => name);
                     performerNames.forEach(name => artists.add(name));
                 }
-                
+               
                 // Add other contributors
-                ['producer', 'engineer', 'mixer', 'mixEngineer', 'masteringEngineer', 'writer'].forEach(role => {
-                    if (track[role] && track[role].trim()) {
-                        const contributors = track[role].split(/[,;]/).map(name => name.trim()).filter(name => name);
+                Object.values(track.contributors).forEach(contributorString => {
+                    if (contributorString && contributorString.trim()) {
+                        const contributors = contributorString.split(/[,;]/).map(name => name.trim()).filter(name => name);
                         contributors.forEach(name => artists.add(name));
                     }
                 });
             });
-
-            let rowIndex = 4;
+            const artistData = [];
             artists.forEach(artist => {
-                // Ensure we have enough rows
-                while (artistsData.length <= rowIndex) {
-                    artistsData.push([]);
-                }
-                
-                artistsData[rowIndex] = [
+                artistData.push([
                     artist, // name
-                    "", // ipi_name_numbers
-                    "" // empty column
-                ];
-                rowIndex++;
+                    '', // ipi_name_numbers
+                    '' // empty column
+                ]);
             });
-
-            processedWorkbook.Sheets['Artists'] = XLSX.utils.aoa_to_sheet(artistsData);
+            return artistData;
         }
 
-        function populatePublishersSheetFixed(uniqueTracks) {
-            const publishersSheet = processedWorkbook.Sheets['Publishers'];
-            const publishersData = XLSX.utils.sheet_to_json(publishersSheet, { header: 1, defval: "" });
-            
-            // Get unique publishers
+        function createPublisherData(uniqueTracks) {
             const publishers = new Set();
+            let publisherIdCounter = 1;
+           
             uniqueTracks.forEach((track) => {
-                if (track.publisher && track.publisher.trim()) {
-                    publishers.add(track.publisher.trim());
+                if (track.contributors.publisher && track.contributors.publisher.trim()) {
+                    const publisherList = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
+                    publisherList.forEach(publisher => publishers.add(publisher));
                 }
             });
-
-            let rowIndex = 4;
-            let publisherIdCounter = 1;
+            const publisherData = [];
             publishers.forEach(publisher => {
                 const publisherId = `PUB${String(publisherIdCounter).padStart(3, '0')}`;
-                
-                // Ensure we have enough rows
-                while (publishersData.length <= rowIndex) {
-                    publishersData.push([]);
-                }
-                
-                publishersData[rowIndex] = [
+                publisherData.push([
                     publisherId, // import_id
                     publisher, // name
-                    "" // ipi_name_numbers
-                ];
-                rowIndex++;
+                    '' // ipi_name_numbers
+                ]);
                 publisherIdCounter++;
             });
-
-            processedWorkbook.Sheets['Publishers'] = XLSX.utils.aoa_to_sheet(publishersData);
+            return publisherData;
         }
 
-        function populateMappingSheetsFixed(uniqueTracks, dataRows, cols) {
-            const mapTrackToAlbumSheet = processedWorkbook.Sheets['MapTrackToAlbum'];
-            const mapTrackToAlbumData = XLSX.utils.sheet_to_json(mapTrackToAlbumSheet, { header: 1, defval: "" });
+        function createPublisherWorkMapping(uniqueTracks) {
+            const publisherMap = new Map();
+            let publisherIdCounter = 1;
+           
+            // Create publisher ID mapping
+            uniqueTracks.forEach((track) => {
+                if (track.contributors.publisher && track.contributors.publisher.trim()) {
+                    const publishers = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
+                    publishers.forEach(publisher => {
+                        if (!publisherMap.has(publisher)) {
+                            publisherMap.set(publisher, `PUB${String(publisherIdCounter).padStart(3, '0')}`);
+                            publisherIdCounter++;
+                        }
+                    });
+                }
+            });
+            const mappingData = [];
+           
+            uniqueTracks.forEach((track, isrc) => {
+                const workId = track.trackId.replace('TRACK', 'WORK');
+               
+                if (track.contributors.publisher && track.contributors.publisher.trim()) {
+                    const publishers = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
+           
+                    publishers.forEach(publisher => {
+                        const publisherId = publisherMap.get(publisher);
+                        if (publisherId) {
+                            mappingData.push([
+                                publisherId, // PUBLISHER ID
+                                workId, // WORK ID
+                                '', // RIGHTS ADMINISTRATOR
+                                '', // AFFILIATION
+                                '', // SPLIT PERCENTAGE
+                                'worldwide', // TERRITORY
+                                '' // TERRITORY RESTRICTIONS
+                            ]);
+                        }
+                    });
+                }
+            });
+            return mappingData;
+        }
 
+        function createAlbumPrimaryContributions(dataRows, cols) {
+            const albums = new Map();
+           
+            dataRows.forEach(row => {
+                const albumTitle = row[cols.productTitle];
+                const barcode = row[cols.barcode];
+                const primaryArtist = row[cols.productPrimaryArtist];
+               
+                if (albumTitle && albumTitle.trim() && barcode && barcode.trim() && primaryArtist && primaryArtist.trim()) {
+                    const albumKey = `${albumTitle}_${barcode}`;
+                    if (!albums.has(albumKey)) {
+                        albums.set(albumKey, {
+                            title: albumTitle,
+                            artist: primaryArtist,
+                            barcode: barcode
+                        });
+                    }
+                }
+            });
+            const contributionData = [];
+            let albumIdCounter = 1;
+           
+            albums.forEach((album, key) => {
+                const albumId = `ALBUM${String(albumIdCounter).padStart(3, '0')}`;
+                contributionData.push([
+                    albumId, // ALBUM ID
+                    album.artist, // ARTIST NAME
+                    '' // FEATURED (empty for primary artists)
+                ]);
+                albumIdCounter++;
+            });
+            return contributionData;
+        }
+
+        function populateUniversalMappings(uniqueTracks, dataRows, cols) {
+            // Create album mapping
             const albumMap = new Map();
             let albumIndex = 1;
-
-            // First: map albums
             dataRows.forEach(row => {
                 const albumTitle = row[cols.productTitle];
                 const barcode = row[cols.barcode];
@@ -1575,535 +1637,266 @@ document.addEventListener('DOMContentLoaded', function() {
                     albumIndex++;
                 }
             });
-
-            let mapRowIndex = 4;
-
-            // Now: map tracks to albums using exact info from each row
+            // MapTrackToAlbum
+            const trackToAlbumData = [];
             dataRows.forEach(row => {
-                if (!columnMapping) return 0;
-				const isrc = row[columnMapping.isrcCode];
+                const isrc = row[cols.isrcCode];
                 const albumTitle = row[cols.productTitle];
                 const barcode = row[cols.barcode];
                 const volumeNo = row[cols.volumeNo] || 1;
                 const trackNo = row[cols.trackNo];
-
                 if (isrc && uniqueTracks.has(isrc)) {
                     const trackId = uniqueTracks.get(isrc).trackId;
                     const albumId = albumMap.get(`${albumTitle}_${barcode}`);
-
                     if (trackId && albumId) {
-                        while (mapTrackToAlbumData.length <= mapRowIndex) {
-                            mapTrackToAlbumData.push([]);
-                        }
-
-                        mapTrackToAlbumData[mapRowIndex] = [
-                            albumId,        // Album ID
-                            trackId,        // Track ID
-                            volumeNo,       // Disc Number
-                            "",             // Side (optional)
-                            trackNo         // Track Number
-                        ];
-                        mapRowIndex++;
+                        trackToAlbumData.push([
+                            albumId, // Album ID
+                            trackId, // Track ID
+                            volumeNo, // Disc Number
+                            '', // Side (optional)
+                            trackNo // Track Number
+                        ]);
                     }
                 }
             });
-
-            processedWorkbook.Sheets['MapTrackToAlbum'] = XLSX.utils.aoa_to_sheet(mapTrackToAlbumData);
-        }
-
-
-
             // TrackPrimaryContributions
-            const trackPrimarySheet = processedWorkbook.Sheets['TrackPrimaryContributions'];
-            const trackPrimaryData = XLSX.utils.sheet_to_json(trackPrimarySheet, { header: 1, defval: "" });
-            
-            let primaryRowIndex = 4;
+            const trackPrimaryData = [];
             uniqueTracks.forEach((track, isrc) => {
-                // Ensure we have enough rows
-                while (trackPrimaryData.length <= primaryRowIndex) {
-                    trackPrimaryData.push([]);
-                }
-                
-                trackPrimaryData[primaryRowIndex] = [
+                trackPrimaryData.push([
                     track.trackId, // import_id
                     track.artist, // import_artist_by_name
-                    "" // featured
-                ];
-                primaryRowIndex++;
+                    '' // featured
+                ]);
             });
-
             // MapWorkToTrack
-            const mapWorkToTrackSheet = processedWorkbook.Sheets['MapWorkToTrack'];
-            const mapWorkToTrackData = XLSX.utils.sheet_to_json(mapWorkToTrackSheet, { header: 1, defval: "" });
-            
-            let workMapRowIndex = 4;
+            const workToTrackData = [];
             uniqueTracks.forEach((track, isrc) => {
                 const workId = track.trackId.replace('TRACK', 'WORK');
-                
-                // Ensure we have enough rows
-                while (mapWorkToTrackData.length <= workMapRowIndex) {
-                    mapWorkToTrackData.push([]);
-                }
-                
-                mapWorkToTrackData[workMapRowIndex] = [
+                workToTrackData.push([
                     track.trackId, // track_import_id
                     workId, // work_import_id
-                    "" // empty column
-                ];
-                workMapRowIndex++;
+                    '' // empty column
+                ]);
             });
-
-            // Update sheets
-            processedWorkbook.Sheets['MapTrackToAlbum'] = XLSX.utils.aoa_to_sheet(mapTrackToAlbumData);
-            processedWorkbook.Sheets['TrackPrimaryContributions'] = XLSX.utils.aoa_to_sheet(trackPrimaryData);
-            processedWorkbook.Sheets['MapWorkToTrack'] = XLSX.utils.aoa_to_sheet(mapWorkToTrackData);
-        
-
-       
-function populateContributionsSheetsFixed(uniqueTracks) {
-    // Create role mapping - moved to separate function to reduce main function size
-    function createOpenPlayRoleMapping() {
-        return {
-            // Production & Engineering
-            'Assistant Mastering Engineer': { role: 'Production & Engineering', type: 'Assistant Mastering Engineer' },
-			'Assistant Mixing Engineer': { role: 'Production & Engineering', type: 'Assistant Mixing Engineer' },
-            'Assistant Producer': { role: 'Production & Engineering', type: 'Assistant Producer' },
-			'Assistant Recording Engineer': { role: 'Production & Engineering', type: 'Assistant Recording Engineer' },
-            'Camera Operator': { role: 'Production & Engineering', type: 'Camera Operator' },
-            'Co-Producer': { role: 'Production & Engineering', type: 'Co-Producer' },
-            'Creative Director': { role: 'Production & Engineering', type: 'Creative Director' },
-            'Engineer': { role: 'Production & Engineering', type: 'Engineer' },
-            'Executive Producer': { role: 'Production & Engineering', type: 'Executive Producer' },
-			'Mastering Engineer': { role: 'Production & Engineering', type: 'Mastering Engineer' },
-			'Mixing Engineer': { role: 'Production & Engineering', type: 'Mixing Engineer' },
-			'Producer': { role: 'Production & Engineering', type: 'Producer' },
-			'Recording Engineer': { role: 'Production & Engineering', type: 'Recording Engineer' },
-			'Set Designer': { role: 'Production & Engineering', type: 'Set Designer' },
-			'Special Effects': { role: 'Production & Engineering', type: 'Special Effects' },
-			'Studio Personnel': { role: 'Production & Engineering', type: 'Studio Personnel' },
-			'Tonmeister': { role: 'Production & Engineering', type: 'Tonmeister' },
-			'Video Director': { role: 'Production & Engineering', type: 'Video Director' },
-			'Video Producer': { role: 'Production & Engineering', type: 'Video Producer' },
-			'Vocal Producer': { role: 'Production & Engineering', type: 'Vocal Producer' },
-            
-            // Instruments - Vocals
-            'Vocals': { role: 'Instrument', type: 'Vocals' },
-            'Lead Vocals': { role: 'Instrument', type: 'Lead Vocals' },
-            'Backing Vocals': { role: 'Instrument', type: 'Backing Vocals' },
-            'Background Vocals': { role: 'Instrument', type: 'Backing Vocals' },
-            'Singer': { role: 'Instrument', type: 'Vocals' },
-            
-            // Instruments - Strings
-            'Guitar': { role: 'Instrument', type: 'Guitar' },
-            'Lead Guitar': { role: 'Instrument', type: 'Lead Guitar' },
-            'Rhythm Guitar': { role: 'Instrument', type: 'Rhythm Guitar' },
-            'Electric Guitar': { role: 'Instrument', type: 'Electric Guitar' },
-            'Acoustic Guitar': { role: 'Instrument', type: 'Acoustic Guitar' },
-            'Bass': { role: 'Instrument', type: 'Bass' },
-            'Bass Guitar': { role: 'Instrument', type: 'Bass Guitar' },
-            'Electric Bass': { role: 'Instrument', type: 'Electric Bass' },
-            'Violin': { role: 'Instrument', type: 'Violin' },
-            'Viola': { role: 'Instrument', type: 'Viola' },
-            'Cello': { role: 'Instrument', type: 'Cello' },
-            
-            // Instruments - Keys & Wind
-            'Piano': { role: 'Instrument', type: 'Piano' },
-            'Keyboards': { role: 'Instrument', type: 'Keyboards' },
-            'Synthesizer': { role: 'Instrument', type: 'Synthesizer' },
-            'Synth': { role: 'Instrument', type: 'Synthesizer' },
-            'Organ': { role: 'Instrument', type: 'Organ' },
-            'Saxophone': { role: 'Instrument', type: 'Saxophone' },
-            'Trumpet': { role: 'Instrument', type: 'Trumpet' },
-            'Flute': { role: 'Instrument', type: 'Flute' },
-            
-            // Instruments - Rhythm
-            'Drums': { role: 'Instrument', type: 'Drums' },
-            'Drum Kit': { role: 'Instrument', type: 'Drums' },
-            'Percussion': { role: 'Instrument', type: 'Percussion' },
-            
-            // Performance
-            'Performer': { role: 'Instrument', type: 'Performer' },
-            'Musician': { role: 'Instrument', type: 'Performer' },
-            
-            // Other Category
-            'Mixer': { role: 'Other', type: 'Mixer' },
-			'Performer': { role: 'Other', type: 'Performer' },
-			'Production Assistant': { role: 'Other', type: 'Production Assistant' },
-			'Programmer': { role: 'Other', type: 'Programmer' },
-			'Vocal Engineer': { role: 'Other', type: 'Vocal Engineer' },
-			'Assistant Sound Engineer': { role: 'Other', type: 'Assistant Sound Engineer' },
-
-        };
-    }
-    
-    const openPlayRoleMapping = createOpenPlayRoleMapping();
-    
-    // Function to get OpenPlay role mapping, with fallback logic
-    function getOpenPlayRole(contributorType) {
-        // Direct mapping
-        if (openPlayRoleMapping[contributorType]) {
-            return openPlayRoleMapping[contributorType];
-        }
-        
-        // Try case-insensitive match
-        const lowerType = contributorType.toLowerCase();
-        for (const [key, value] of Object.entries(openPlayRoleMapping)) {
-            if (key.toLowerCase() === lowerType) {
-                return value;
+            // Populate sheets if they exist
+            if (templateStructure.sheets['MapTrackToAlbum']) {
+                populateSheetUniversal('MapTrackToAlbum', trackToAlbumData);
+            }
+            if (templateStructure.sheets['TrackPrimaryContributions']) {
+                populateSheetUniversal('TrackPrimaryContributions', trackPrimaryData);
+            }
+            if (templateStructure.sheets['MapWorkToTrack']) {
+                populateSheetUniversal('MapWorkToTrack', workToTrackData);
             }
         }
-        
-        // Fallback logic based on keywords
-        const typeWords = lowerType.split(/[\s,]+/);
-        
-        // Check for instrument-related keywords
-        const instrumentKeywords = ['guitar', 'bass', 'drum', 'keyboard', 'piano', 'vocal', 'singing', 'instrument', 'percussion', 'violin', 'saxophone', 'trumpet', 'flute'];
-        if (typeWords.some(word => instrumentKeywords.some(keyword => word.includes(keyword)))) {
-            return { role: 'Instrument', type: contributorType };
-        }
-        
-        // Check for production-related keywords
-        const productionKeywords = ['producer', 'production', 'recording', 'engineer', 'tracking'];
-        if (typeWords.some(word => productionKeywords.some(keyword => word.includes(keyword)))) {
-            return { role: 'Production & Engineering', type: contributorType };
-        }
-    
-        
-        // Default fallback to 'Other'
-        return { role: 'Other', type: contributorType };
-    }
-    
-    // Function to parse multi-role strings (comma-separated roles for one performer)
-    function parseMultipleRoles(roleString) {
-        if (!roleString || !roleString.trim()) return [];
-        
-        // Split by comma and clean up
-        return roleString.split(',')
-            .map(role => role.trim())
-            .filter(role => role.length > 0);
-    }
-    
-    const trackContribSheet = processedWorkbook.Sheets['TrackContributions'];
-    const trackContribData = XLSX.utils.sheet_to_json(trackContribSheet, { header: 1, defval: "" });
-    
-    const workContribSheet = processedWorkbook.Sheets['WorkContributions'];
-    const workContribData = XLSX.utils.sheet_to_json(workContribSheet, { header: 1, defval: "" });
-    
-    let trackContribRowIndex = 4;
-    let workContribRowIndex = 4;
-    
-    uniqueTracks.forEach((track, isrc) => {
-        const workId = track.trackId.replace('TRACK', 'WORK');
-        
-        // Process pipe-delimited performers and their roles
-        if (track.performers && track.performers.trim()) {
-            const performerNames = track.performers.split('|').map(name => name.trim()).filter(name => name);
-            const performerRoles = track.roles ? track.roles.split('|').map(role => role.trim()).filter(role => role) : [];
-            
-            performerNames.forEach((performer, index) => {
-                const roleString = performerRoles[index] || performerRoles[0] || 'Performer';
-                
-                // Parse multiple roles for this performer (comma-separated)
-                const individualRoles = parseMultipleRoles(roleString);
-                
-                individualRoles.forEach(individualRole => {
-                    const openPlayMapping = getOpenPlayRole(individualRole);
-                    
-                    // Ensure we have enough rows
-                    while (trackContribData.length <= trackContribRowIndex) {
-                        trackContribData.push([]);
-                    }
-                    
-                    trackContribData[trackContribRowIndex] = [
-                        track.trackId, // track_id
-                        performer, // artist_name
-                        openPlayMapping.role, // role (OpenPlay category)
-                        openPlayMapping.type // type (specific role type)
-                    ];
-                    trackContribRowIndex++;
-                });
-            });
-        }
-        
-        // Add other contributors with proper role mapping
-        const contributors = [
-            { name: track.producer, originalType: 'Producer' },
-            { name: track.engineer, originalType: 'Recording Engineer' },
-            { name: track.mixer, originalType: 'Mixer' },
-            { name: track.mixEngineer, originalType: 'Mix Engineer' },
-            { name: track.masteringEngineer, originalType: 'Mastering Engineer' }
-        ];
-        
-        contributors.forEach(contributor => {
-            if (contributor.name && contributor.name.trim()) {
-                const names = contributor.name.split(/[,;]/).map(name => name.trim()).filter(name => name);
-                
-                names.forEach(name => {
-                    const openPlayMapping = getOpenPlayRole(contributor.originalType);
-                    
-                    // Ensure we have enough rows
-                    while (trackContribData.length <= trackContribRowIndex) {
-                        trackContribData.push([]);
-                    }
-                    
-                    trackContribData[trackContribRowIndex] = [
-                        track.trackId, // track_id
-                        name, // artist_name
-                        openPlayMapping.role, // role (OpenPlay category)
-                        openPlayMapping.type // type (specific role type)
-                    ];
-                    trackContribRowIndex++;
-                });
-            }
-        });
-        
-        // Work contributors (writers/composers) - these typically go under composition
-        if (track.writer && track.writer.trim()) {
-            const writers = track.writer.split(/[,;]/).map(w => w.trim()).filter(w => w);
-            
-            writers.forEach(writer => {
-                // Ensure we have enough rows
-                while (workContribData.length <= workContribRowIndex) {
-                    workContribData.push([]);
+
+        function populateUniversalContributions(uniqueTracks) {
+            const openPlayRoleMapping = createOpenPlayRoleMapping();
+           
+            function getOpenPlayRole(contributorType) {
+                if (openPlayRoleMapping[contributorType]) {
+                    return openPlayRoleMapping[contributorType];
                 }
-                
-                workContribData[workContribRowIndex] = [
-                    workId, // work_id
-                    writer, // artist_name
-                    'Composition & Lyrics', // role
-                    'Composer', // type
-                    '', // affiliation
-                    '', // split_percentage
-                    '', // territory
-                    '' // territory_restrictions
+               
+                const lowerType = contributorType.toLowerCase();
+                for (const [key, value] of Object.entries(openPlayRoleMapping)) {
+                    if (key.toLowerCase() === lowerType) {
+                        return value;
+                    }
+                }
+               
+                // Fallback logic
+                const typeWords = lowerType.split(/[\s,]+/);
+                const instrumentKeywords = ['guitar', 'bass', 'drum', 'keyboard', 'piano', 'vocal', 'singing', 'instrument', 'percussion', 'violin', 'saxophone', 'trumpet', 'flute'];
+                if (typeWords.some(word => instrumentKeywords.some(keyword => word.includes(keyword)))) {
+                    return { role: 'Instrument', type: contributorType };
+                }
+               
+                const productionKeywords = ['producer', 'production', 'recording', 'engineer', 'tracking'];
+                if (typeWords.some(word => productionKeywords.some(keyword => word.includes(keyword)))) {
+                    return { role: 'Production & Engineering', type: contributorType };
+                }
+               
+                return { role: 'Other', type: contributorType };
+            }
+           
+            function parseMultipleRoles(roleString) {
+                if (!roleString || !roleString.trim()) return [];
+                return roleString.split(',').map(role => role.trim()).filter(role => role.length > 0);
+            }
+           
+            const trackContribData = [];
+            const workContribData = [];
+           
+            uniqueTracks.forEach((track, isrc) => {
+                const workId = track.trackId.replace('TRACK', 'WORK');
+               
+                // Process pipe-delimited performers
+                if (track.contributors.performers && track.contributors.performers.trim()) {
+                    const performerNames = track.contributors.performers.split('|').map(name => name.trim()).filter(name => name);
+                    const performerRoles = track.contributors.roles ? track.contributors.roles.split('|').map(role => role.trim()).filter(role => role) : [];
+           
+                    performerNames.forEach((performer, index) => {
+                        const roleString = performerRoles[index] || performerRoles[0] || 'Performer';
+                        const individualRoles = parseMultipleRoles(roleString);
+               
+                        individualRoles.forEach(individualRole => {
+                            const openPlayMapping = getOpenPlayRole(individualRole);
+                            trackContribData.push([
+                                track.trackId,
+                                performer,
+                                openPlayMapping.role,
+                                openPlayMapping.type
+                            ]);
+                        });
+                    });
+                }
+               
+                // Add other contributors
+                const contributorTypes = [
+                    { name: track.contributors.producer, originalType: 'Producer' },
+                    { name: track.contributors.engineer, originalType: 'Recording Engineer' },
+                    { name: track.contributors.mixer, originalType: 'Mixer' },
+                    { name: track.contributors.mixEngineer, originalType: 'Mix Engineer' },
+                    { name: track.contributors.masteringEngineer, originalType: 'Mastering Engineer' }
                 ];
-                workContribRowIndex++;
+               
+                contributorTypes.forEach(contributor => {
+                    if (contributor.name && contributor.name.trim()) {
+                        const names = contributor.name.split(/[,;]/).map(name => name.trim()).filter(name => name);
+               
+                        names.forEach(name => {
+                            const openPlayMapping = getOpenPlayRole(contributor.originalType);
+                            trackContribData.push([
+                                track.trackId,
+                                name,
+                                openPlayMapping.role,
+                                openPlayMapping.type
+                            ]);
+                        });
+                    }
+                });
+               
+                // Work contributors (writers)
+                if (track.contributors.writer && track.contributors.writer.trim()) {
+                    const writers = track.contributors.writer.split(/[,;]/).map(w => w.trim()).filter(w => w);
+           
+                    writers.forEach(writer => {
+                        workContribData.push([
+                            workId, // work_id
+                            writer, // artist_name
+                            'Composition & Lyrics', // role
+                            'Composer', // type
+                            '', // affiliation
+                            '', // split_percentage
+                            '', // territory
+                            '' // territory_restrictions
+                        ]);
+                    });
+                }
             });
+           
+            // Populate contribution sheets if they exist
+            if (templateStructure.sheets['TrackContributions']) {
+                populateSheetUniversal('TrackContributions', trackContribData);
+            }
+            if (templateStructure.sheets['WorkContributions']) {
+                populateSheetUniversal('WorkContributions', workContribData);
+            }
         }
-    });
-    
-    // Update sheets
-    processedWorkbook.Sheets['TrackContributions'] = XLSX.utils.aoa_to_sheet(trackContribData);
-    processedWorkbook.Sheets['WorkContributions'] = XLSX.utils.aoa_to_sheet(workContribData);
-}
 
-		// Complete the missing populateMappingSheetsFixed function
-		function populateMappingSheetsFixed(uniqueTracks, dataRows, cols) {
-			const mapTrackToAlbumSheet = processedWorkbook.Sheets['MapTrackToAlbum'];
-			const mapTrackToAlbumData = XLSX.utils.sheet_to_json(mapTrackToAlbumSheet, { header: 1, defval: "" });
-
-			const albumMap = new Map();
-			let albumIndex = 1;
-
-			// First: map albums
-			dataRows.forEach(row => {
-				const albumTitle = row[cols.productTitle];
-				const barcode = row[cols.barcode];
-				const key = `${albumTitle}_${barcode}`;
-				if (albumTitle && barcode && !albumMap.has(key)) {
-					albumMap.set(key, `ALBUM${String(albumIndex).padStart(3, '0')}`);
-					albumIndex++;
-				}
-			});
-
-			let mapRowIndex = 4;
-
-			// Now: map tracks to albums using exact info from each row
-			dataRows.forEach(row => {
-				if (!columnMapping) return;
-				const isrc = row[columnMapping.isrcCode];
-				const albumTitle = row[cols.productTitle];
-				const barcode = row[cols.barcode];
-				const volumeNo = row[cols.volumeNo] || 1;
-				const trackNo = row[cols.trackNo];
-
-				if (isrc && uniqueTracks.has(isrc)) {
-					const trackId = uniqueTracks.get(isrc).trackId;
-					const albumId = albumMap.get(`${albumTitle}_${barcode}`);
-
-					if (trackId && albumId) {
-						while (mapTrackToAlbumData.length <= mapRowIndex) {
-							mapTrackToAlbumData.push([]);
-						}
-
-						mapTrackToAlbumData[mapRowIndex] = [
-							albumId,        // Album ID
-							trackId,        // Track ID
-							volumeNo,       // Disc Number
-							"",             // Side (optional)
-							trackNo         // Track Number
-						];
-						mapRowIndex++;
-					}
-				}
-			});
-
-			// TrackPrimaryContributions
-			const trackPrimarySheet = processedWorkbook.Sheets['TrackPrimaryContributions'];
-			const trackPrimaryData = XLSX.utils.sheet_to_json(trackPrimarySheet, { header: 1, defval: "" });
-			
-			let primaryRowIndex = 4;
-			uniqueTracks.forEach((track, isrc) => {
-				// Ensure we have enough rows
-				while (trackPrimaryData.length <= primaryRowIndex) {
-					trackPrimaryData.push([]);
-				}
-				
-				trackPrimaryData[primaryRowIndex] = [
-					track.trackId, // import_id
-					track.artist, // import_artist_by_name
-					"" // featured
-				];
-				primaryRowIndex++;
-			});
-
-			// MapWorkToTrack
-			const mapWorkToTrackSheet = processedWorkbook.Sheets['MapWorkToTrack'];
-			const mapWorkToTrackData = XLSX.utils.sheet_to_json(mapWorkToTrackSheet, { header: 1, defval: "" });
-			
-			let workMapRowIndex = 4;
-			uniqueTracks.forEach((track, isrc) => {
-				const workId = track.trackId.replace('TRACK', 'WORK');
-				
-				// Ensure we have enough rows
-				while (mapWorkToTrackData.length <= workMapRowIndex) {
-					mapWorkToTrackData.push([]);
-				}
-				
-				mapWorkToTrackData[workMapRowIndex] = [
-					track.trackId, // track_import_id
-					workId, // work_import_id
-					"" // empty column
-				];
-				workMapRowIndex++;
-			});
-
-			// Update sheets
-			processedWorkbook.Sheets['MapTrackToAlbum'] = XLSX.utils.aoa_to_sheet(mapTrackToAlbumData);
-			processedWorkbook.Sheets['TrackPrimaryContributions'] = XLSX.utils.aoa_to_sheet(trackPrimaryData);
-			processedWorkbook.Sheets['MapWorkToTrack'] = XLSX.utils.aoa_to_sheet(mapWorkToTrackData);
-		}
-
-// Complete the missing populateMappingSheetsFixed function
-		function populateMappingSheetsFixed(uniqueTracks, dataRows, cols) {
-			const mapTrackToAlbumSheet = processedWorkbook.Sheets['MapTrackToAlbum'];
-			const mapTrackToAlbumData = XLSX.utils.sheet_to_json(mapTrackToAlbumSheet, { header: 1, defval: "" });
-
-			const albumMap = new Map();
-			let albumIndex = 1;
-
-			// First: map albums
-			dataRows.forEach(row => {
-				const albumTitle = row[cols.productTitle];
-				const barcode = row[cols.barcode];
-				const key = `${albumTitle}_${barcode}`;
-				if (albumTitle && barcode && !albumMap.has(key)) {
-					albumMap.set(key, `ALBUM${String(albumIndex).padStart(3, '0')}`);
-					albumIndex++;
-				}
-			});
-
-			let mapRowIndex = 4;
-
-			// Now: map tracks to albums using exact info from each row
-			dataRows.forEach(row => {
-				if (!columnMapping) return;
-				const isrc = row[columnMapping.isrcCode];
-				const albumTitle = row[cols.productTitle];
-				const barcode = row[cols.barcode];
-				const volumeNo = row[cols.volumeNo] || 1;
-				const trackNo = row[cols.trackNo];
-
-				if (isrc && uniqueTracks.has(isrc)) {
-					const trackId = uniqueTracks.get(isrc).trackId;
-					const albumId = albumMap.get(`${albumTitle}_${barcode}`);
-
-					if (trackId && albumId) {
-						while (mapTrackToAlbumData.length <= mapRowIndex) {
-							mapTrackToAlbumData.push([]);
-						}
-
-						mapTrackToAlbumData[mapRowIndex] = [
-							albumId,        // Album ID
-							trackId,        // Track ID
-							volumeNo,       // Disc Number
-							"",             // Side (optional)
-							trackNo         // Track Number
-						];
-						mapRowIndex++;
-					}
-				}
-			});
-
-			// TrackPrimaryContributions
-			const trackPrimarySheet = processedWorkbook.Sheets['TrackPrimaryContributions'];
-			const trackPrimaryData = XLSX.utils.sheet_to_json(trackPrimarySheet, { header: 1, defval: "" });
-			
-			let primaryRowIndex = 4;
-			uniqueTracks.forEach((track, isrc) => {
-				// Ensure we have enough rows
-				while (trackPrimaryData.length <= primaryRowIndex) {
-					trackPrimaryData.push([]);
-				}
-				
-				trackPrimaryData[primaryRowIndex] = [
-					track.trackId, // import_id
-					track.artist, // import_artist_by_name
-					"" // featured
-				];
-				primaryRowIndex++;
-			});
-
-			// MapWorkToTrack
-			const mapWorkToTrackSheet = processedWorkbook.Sheets['MapWorkToTrack'];
-			const mapWorkToTrackData = XLSX.utils.sheet_to_json(mapWorkToTrackSheet, { header: 1, defval: "" });
-			
-			let workMapRowIndex = 4;
-			uniqueTracks.forEach((track, isrc) => {
-				const workId = track.trackId.replace('TRACK', 'WORK');
-				
-				// Ensure we have enough rows
-				while (mapWorkToTrackData.length <= workMapRowIndex) {
-					mapWorkToTrackData.push([]);
-				}
-				
-				mapWorkToTrackData[workMapRowIndex] = [
-					track.trackId, // track_import_id
-					workId, // work_import_id
-					"" // empty column
-				];
-				workMapRowIndex++;
-			});
-
-			// Update sheets
-			processedWorkbook.Sheets['MapTrackToAlbum'] = XLSX.utils.aoa_to_sheet(mapTrackToAlbumData);
-			processedWorkbook.Sheets['TrackPrimaryContributions'] = XLSX.utils.aoa_to_sheet(trackPrimaryData);
-			processedWorkbook.Sheets['MapWorkToTrack'] = XLSX.utils.aoa_to_sheet(mapWorkToTrackData);
-		}
+        function createOpenPlayRoleMapping() {
+            return {
+                // Production & Engineering
+                'Assistant Mastering Engineer': { role: 'Production & Engineering', type: 'Assistant Mastering Engineer' },
+                'Assistant Mixing Engineer': { role: 'Production & Engineering', type: 'Assistant Mixing Engineer' },
+                'Assistant Producer': { role: 'Production & Engineering', type: 'Assistant Producer' },
+                'Assistant Recording Engineer': { role: 'Production & Engineering', type: 'Assistant Recording Engineer' },
+                'Camera Operator': { role: 'Production & Engineering', type: 'Camera Operator' },
+                'Co-Producer': { role: 'Production & Engineering', type: 'Co-Producer' },
+                'Creative Director': { role: 'Production & Engineering', type: 'Creative Director' },
+                'Engineer': { role: 'Production & Engineering', type: 'Engineer' },
+                'Executive Producer': { role: 'Production & Engineering', type: 'Executive Producer' },
+                'Mastering Engineer': { role: 'Production & Engineering', type: 'Mastering Engineer' },
+                'Mixing Engineer': { role: 'Production & Engineering', type: 'Mixing Engineer' },
+                'Producer': { role: 'Production & Engineering', type: 'Producer' },
+                'Recording Engineer': { role: 'Production & Engineering', type: 'Recording Engineer' },
+                'Set Designer': { role: 'Production & Engineering', type: 'Set Designer' },
+                'Special Effects': { role: 'Production & Engineering', type: 'Special Effects' },
+                'Studio Personnel': { role: 'Production & Engineering', type: 'Studio Personnel' },
+                'Tonmeister': { role: 'Production & Engineering', type: 'Tonmeister' },
+                'Video Director': { role: 'Production & Engineering', type: 'Video Director' },
+                'Video Producer': { role: 'Production & Engineering', type: 'Video Producer' },
+                'Vocal Producer': { role: 'Production & Engineering', type: 'Vocal Producer' },
+               
+                // Instruments - Vocals
+                'Vocals': { role: 'Instrument', type: 'Vocals' },
+                'Lead Vocals': { role: 'Instrument', type: 'Lead Vocals' },
+                'Backing Vocals': { role: 'Instrument', type: 'Backing Vocals' },
+                'Background Vocals': { role: 'Instrument', type: 'Backing Vocals' },
+                'Singer': { role: 'Instrument', type: 'Vocals' },
+               
+                // Instruments - Strings
+                'Guitar': { role: 'Instrument', type: 'Guitar' },
+                'Lead Guitar': { role: 'Instrument', type: 'Lead Guitar' },
+                'Rhythm Guitar': { role: 'Instrument', type: 'Rhythm Guitar' },
+                'Electric Guitar': { role: 'Instrument', type: 'Electric Guitar' },
+                'Acoustic Guitar': { role: 'Instrument', type: 'Acoustic Guitar' },
+                'Bass': { role: 'Instrument', type: 'Bass' },
+                'Bass Guitar': { role: 'Instrument', type: 'Bass Guitar' },
+                'Electric Bass': { role: 'Instrument', type: 'Electric Bass' },
+                'Violin': { role: 'Instrument', type: 'Violin' },
+                'Viola': { role: 'Instrument', type: 'Viola' },
+                'Cello': { role: 'Instrument', type: 'Cello' },
+               
+                // Instruments - Keys & Wind
+                'Piano': { role: 'Instrument', type: 'Piano' },
+                'Keyboards': { role: 'Instrument', type: 'Keyboards' },
+                'Synthesizer': { role: 'Instrument', type: 'Synthesizer' },
+                'Synth': { role: 'Instrument', type: 'Synthesizer' },
+                'Organ': { role: 'Instrument', type: 'Organ' },
+                'Saxophone': { role: 'Instrument', type: 'Saxophone' },
+                'Trumpet': { role: 'Instrument', type: 'Trumpet' },
+                'Flute': { role: 'Instrument', type: 'Flute' },
+               
+                // Instruments - Rhythm
+                'Drums': { role: 'Instrument', type: 'Drums' },
+                'Drum Kit': { role: 'Instrument', type: 'Drums' },
+                'Percussion': { role: 'Instrument', type: 'Percussion' },
+               
+                // Performance
+                'Performer': { role: 'Instrument', type: 'Performer' },
+                'Musician': { role: 'Instrument', type: 'Performer' },
+               
+                // Other Category
+                'Mixer': { role: 'Other', type: 'Mixer' },
+                'Production Assistant': { role: 'Other', type: 'Production Assistant' },
+                'Programmer': { role: 'Other', type: 'Programmer' },
+                'Vocal Engineer': { role: 'Other', type: 'Vocal Engineer' },
+                'Assistant Sound Engineer': { role: 'Other', type: 'Assistant Sound Engineer' }
+            };
+        }
 
         function formatDate(dateValue) {
             if (!dateValue) return "";
-            
-            // Handle Excel date serial numbers
+           
             if (typeof dateValue === 'number') {
                 const date = new Date((dateValue - 25569) * 86400 * 1000);
                 return date.toISOString().split('T')[0];
             }
-            
-            // Handle date strings
+           
             if (typeof dateValue === 'string') {
                 const date = new Date(dateValue);
                 if (!isNaN(date.getTime())) {
                     return date.toISOString().split('T')[0];
                 }
             }
-            
+           
             return dateValue;
         }
 
         function formatDuration(durationValue) {
             if (!durationValue) return "00:00:00";
-
             if (typeof durationValue === 'number') {
                 const totalSeconds = Math.round(durationValue * 86400);
                 const hours = Math.floor(totalSeconds / 3600);
@@ -2111,52 +1904,44 @@ function populateContributionsSheetsFixed(uniqueTracks) {
                 const seconds = totalSeconds % 60;
                 return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             }
-
-            // Handle string formats like "3:24" or "1:02:33"
             if (typeof durationValue === 'string') {
                 const parts = durationValue.split(':').map(p => parseInt(p.trim(), 10));
                 if (parts.length === 2) {
-                    // MM:SS
                     return `00:${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`;
                 } else if (parts.length === 3) {
-                    // HH:MM:SS
                     return parts.map(p => String(p).padStart(2, '0')).join(':');
                 }
             }
-
-            return "00:00:00"; // Fallback
+            return "00:00:00";
         }
-
 
         function downloadResult() {
             if (!processedWorkbook) return;
-            
+           
             try {
                 const wbout = XLSX.write(processedWorkbook, { bookType: 'xlsx', type: 'binary' });
-                
+               
                 function s2ab(s) {
                     const buf = new ArrayBuffer(s.length);
                     const view = new Uint8Array(buf);
                     for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
                     return buf;
                 }
-                
+               
                 const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
                 const url = URL.createObjectURL(blob);
-                
+               
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `OpenPlay_Import_Template_FIXED_${new Date().toISOString().split('T')[0]}.xlsx`;
+                a.download = `OpenPlay_Import_Template_Universal_${new Date().toISOString().split('T')[0]}.xlsx`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                
+               
             } catch (error) {
                 alert('Error downloading file: ' + error.message);
+                console.error('Download error:', error);
             }
         }
-	
     </script>
-</body>
-</html>
