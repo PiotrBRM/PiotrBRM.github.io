@@ -1,44 +1,131 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fixed OpenPlay Import Template Converter</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>OpenPlay Import â€" Redesigned</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&amp;display=swap" rel="stylesheet"/>
 <style>
-	
-/* Splash Screen Styles */
-.splash-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #FFFFFF 0%, #f8faff 100%);
-    background-size: 400% 400%;
-    animation: gradientShift 2.5s ease-in-out infinite;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    opacity: 1;
-    transition: opacity 0.8s ease-out;
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Splash screen container */
+    #splash {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: black;
+	 padding-top: 0vh; /* move logo ~15% down from top */
+     display: flex;
+	 align-items: center;  /* vertical center */
+     justify-content: center;
+     z-index: 9999;
+     transition: background-color 1.5s ease;
 }
 
-.splash-screen.fade-out {
-    opacity: 0;
-    pointer-events: none;
-}
+    /* Wrapper ensures logos stack properly */
+    #logo-wrapper {
+      position: relative;
+      width: 10%; /* slightly smaller */
+      animation: pulse 1.8s ease-in-out infinite alternate;
+    }
 
-.splash-logo {
-    max-width: 500px;
-    max-height: 350px;
-    opacity: 0;
-    transform: scale(0.8) translateY(20px);
-    animation: logoEntrance 2s ease-out forwards;
-    filter: drop-shadow(0 10px 30px rgba(25, 57, 138, 0.3));
-}
+    /* Pulse animation (continuous scaling) */
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to   { transform: scale(1) translateY(-30px); }
+	      animation: logoEntrance 1s ease-out forwards;
+
+    }
+
+    /* Logos stacked on top of each other */
+    #logo-white, #logo-color {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: auto;
+      transition: opacity 1s ease;
+    }
+
+    #logo-white {
+      opacity: 1;
+    }
+
+    #logo-color {
+      opacity: 0;
+    }
+
+    /* Website content hidden initially */
+    #content {
+      display: none;
+      padding: 2rem;
+    }
+
+    /* Transition state */
+    #splash.transition {
+      background-color: white;
+    }
+
+    #splash.transition #logo-white {
+      opacity: 0;
+    }
+
+    #splash.transition #logo-color {
+      opacity: 1;
+    }
+
+    /* Fade splash out */
+    #splash.fade-out {
+      opacity: 0;
+      transition: opacity 1s ease;
+      pointer-events: none;
+    }
+  </style>
+  <style>
+
+    /* ------------------ Global theme (royal blue & white) ------------------ */
+    :root{
+      --royal-1:#0b3d91; /* deep royal blue */
+      --royal-2:#1549c7;
+      --royal-3:#2563eb;
+      --muted:#f6fbff;
+      --glass: rgba(255,255,255,0.86);
+      --radius:18px;
+      --accent: #ffffff;
+      --shadow: 0 20px 50px rgba(15,30,80,0.18);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      margin:0;padding:0;
+      background: linear-gradient(135deg,var(--royal-1),var(--royal-2),var(--royal-3));
+      background-size: 400% 400%;
+      animation: bgShift 20s ease-in-out infinite;
+      -webkit-font-smoothing:antialiased;color:#08315a;overflow-y:auto;
+    }
+  body::before{
+      content:"";
+      position:fixed;inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 100 100'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpolygon points='50 0 100 25 50 50 0 25'/%3E%3Cpolygon points='50 50 100 75 50 100 0 75'/%3E%3C/g%3E%3C/svg%3E");
+      animation: patternScroll 30s linear infinite;
+      z-index:0;
+    }
+    @keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    @keyframes patternScroll{from{background-position:0 0}to{background-position:400px 400px}}
+
+
 
 @keyframes gradientShift {
     0% {
@@ -51,1897 +138,1568 @@
         background-position: 0% 50%;
     }
 }
-
-@keyframes logoEntrance {
-    0% {
-        opacity: 0;
-        transform: scale(0.8) translateY(20px) rotateY(-15deg);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1.05) translateY(-5px) rotateY(0deg);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1) translateY(0px) rotateY(0deg);
-    }
-}
-
-/* Pulse animation for the logo */
-.splash-logo::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-    background: rgba(25, 57, 138, 0.1);
-    border-radius: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    animation: pulse 2s ease-out infinite;
-}
-
-@keyframes pulse {
-    0% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(2);
-        opacity: 0;
-    }
-}
-
-/* Hide main container initially */
-.container {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-/* Logo styling */
-.header-logo {
-    max-width: 480px;
-    max-height: 160px;
-    width: auto;
-    height: auto;
-    margin-bottom: 20px;
-    opacity: 0.95;
-    filter: brightness(1.1) contrast(1.05);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1;
-}
-
-.header-logo:hover {
-    opacity: 1;
-    transform: scale(1.05);
-    filter: brightness(1.2) contrast(1.1);
-}
-
-.header h1 {
-    font-size: 3rem;
-    margin-bottom: 12px;
-    font-weight: 700;
-    position: relative;
-    z-index: 1;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
-}
-
-.header p {
-    font-size: 1.2rem;
-    opacity: 0.95;
-    position: relative;
-    z-index: 1;
-    font-weight: 400;
-}
-
-.container.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #19398a 0%, #1e40af 25%, #2563eb 75%, #3b82f6 100%);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
-    min-height: 100vh;
-    padding: 20px;
-    position: relative;
-    overflow-x: hidden;
-}
-
-/* Animated Background Elements - Tech Grid Style */
-.bg-animation {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-}
-
-/* Animated Grid Lines */
-.grid-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-    background-size: 50px 50px;
-
-}
-
-@keyframes gridMove {
-    0% {
-        transform: translate(0, 0);
-    }
-    100% {
-        transform: translate(50px, 50px);
-    }
-}
-
-/* Flowing Lines */
-.data-flow {
-    position: absolute;
-    height: 1px;
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(255, 255, 255, 0.3) 20%, 
-        rgba(255, 255, 255, 0.6) 50%, 
-        rgba(255, 255, 255, 0.3) 80%, 
-        transparent 100%);
-    animation: dataFlow linear infinite;
-}
-
-.data-flow:nth-child(8) {
-    top: 20%;
-    left: -100%;
-    width: 200px;
-    animation-duration: 16s;
-    animation-delay: 0s;
-}
-
-.data-flow:nth-child(9) {
-    top: 40%;
-    left: -100%;
-    width: 150px;
-    animation-duration: 12s;
-    animation-delay: -4s;
-}
-
-.data-flow:nth-child(10) {
-    top: 65%;
-    left: -100%;
-    width: 180px;
-    animation-duration: 14s;
-    animation-delay: -8s;
-}
-
-.data-flow:nth-child(11) {
-    top: 80%;
-    left: -100%;
-    width: 120px;
-    animation-duration: 18s;
-    animation-delay: -2s;
-}
-
-@keyframes dataFlow {
-    0% {
-        left: -100%;
-    }
-    100% {
-        left: 100%;
-    }
-}
-
-/* Subtle Geometric Accents */
-.tech-accent {
-    position: absolute;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    animation: techFloat ease-in-out infinite;
-}
-
-.tech-accent:nth-child(12) {
-    top: 10%;
-    right: 15%;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    animation-duration: 6s;
-    animation-delay: 0s;
-}
-
-.tech-accent:nth-child(13) {
-    top: 55%;
-    right: 25%;
-    width: 30px;
-    height: 30px;
-    transform: rotate(45deg);
-    animation-duration: 8s;
-    animation-delay: -3s;
-}
-
-.tech-accent:nth-child(14) {
-    top: 30%;
-    left: 10%;
-    width: 35px;
-    height: 20px;
-    border-radius: 20px;
-    animation-duration: 7s;
-    animation-delay: -1.5s;
-}
-
-@keyframes techFloat {
-    0%, 100% {
-        transform: translateY(0px) rotate(0deg);
-        opacity: 0.1;
-    }
-    50% {
-        transform: translateY(-20px) rotate(180deg);
-        opacity: 0.3;
-    }
-}
-
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(20px);
-    border-radius: 24px;
-    box-shadow: 
-        0 25px 50px rgba(25, 57, 138, 0.2),
-        0 0 0 1px rgba(255, 255, 255, 0.3);
-    overflow: hidden;
-    animation: fadeInUp 0.8s ease-out;
-    position: relative;
-    z-index: 1;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.header {
-    background: linear-gradient(135deg, #19398a 0%, #1e40af 30%, #2563eb 70%, #3b82f6 100%);
-    color: white;
-    padding: 50px 40px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
-    animation: patternMove 20s linear infinite;
-}
-
-@keyframes patternMove {
-    0% { transform: translateX(0) translateY(0); }
-    100% { transform: translateX(60px) translateY(60px); }
-}
-
-.header h1 {
-    font-size: 3rem;
-    margin-bottom: 12px;
-    font-weight: 700;
-    position: relative;
-    z-index: 1;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
-}
-
-.header p {
-    font-size: 1.2rem;
-    opacity: 0.95;
-    position: relative;
-    z-index: 1;
-    font-weight: 400;
-}
-
-.main-content {
-    padding: 50px 40px;
-}
-
-.step {
-    margin-bottom: 50px;
-    padding: 40px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
-    border-radius: 20px;
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    box-shadow: 
-        0 10px 25px rgba(25, 57, 138, 0.08),
-        0 1px 3px rgba(25, 57, 138, 0.15);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-}
-
-.step::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #19398a, #1e40af, #2563eb, #3b82f6);
-}
-
-.step:hover {
-    transform: translateY(-8px);
-    box-shadow: 
-        0 25px 50px rgba(25, 57, 138, 0.15),
-        0 10px 20px rgba(25, 57, 138, 0.1);
-}
-
-.step h2 {
-    color: #1e293b;
-    margin-bottom: 16px;
-    font-size: 1.75rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.step p {
-    color: #475569;
-    margin-bottom: 24px;
-    font-size: 1rem;
-    line-height: 1.6;
-}
-
-/* Fix for button click issues */
-.file-upload {
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
-    margin-bottom: 24px;
-}
-
-.file-upload input[type=file] {
-    position: absolute;
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    z-index: 2;
-}
-
-.upload-button {
-    display: inline-block;
-    padding: 18px 36px;
-    background: linear-gradient(135deg, #19398a 0%, #1e40af 30%, #2563eb 70%, #3b82f6 100%);
-    color: white;
-    border-radius: 16px;
-    font-weight: 600;
-    font-size: 1rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
-    cursor: pointer;
-    box-shadow: 
-        0 10px 25px rgba(25, 57, 138, 0.4),
-        0 4px 12px rgba(25, 57, 138, 0.3);
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-    pointer-events: none;
-}
-
-.upload-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s;
-    pointer-events: none;
-}
-
-.file-upload:hover .upload-button::before {
-    left: 100%;
-}
-
-.file-upload:hover .upload-button {
-    transform: translateY(-3px);
-    box-shadow: 
-        0 20px 40px rgba(25, 57, 138, 0.5),
-        0 10px 20px rgba(25, 57, 138, 0.4);
-}
-
-.process-button {
-    background: linear-gradient(135deg, #19398a 0%, #1e40af 30%, #2563eb 70%, #3b82f6 100%);
-    color: white;
-    border: none;
-    padding: 18px 48px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-top: 24px;
-    box-shadow: 
-        0 10px 25px rgba(25, 57, 138, 0.4),
-        0 4px 12px rgba(25, 57, 138, 0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-.process-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s;
-    pointer-events: none;
-}
-
-.process-button:hover::before {
-    left: 100%;
-}
-
-.process-button:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 
-        0 20px 40px rgba(25, 57, 138, 0.5),
-        0 10px 20px rgba(25, 57, 138, 0.4);
-}
-
-.process-button:disabled {
-    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.download-button {
-    background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
-    color: #19398a;
-    border: 2px solid #19398a;
-    padding: 18px 48px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-top: 24px;
-    box-shadow: 
-        0 10px 25px rgba(25, 57, 138, 0.15),
-        0 4px 12px rgba(25, 57, 138, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-.download-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(25, 57, 138, 0.1), transparent);
-    transition: left 0.5s;
+	
+
+    /* ------------------ App shell ------------------ */
+    .app{max-width:1200px;margin:36px auto;padding:28px;background:var(--glass);border-radius:24px;box-shadow:var(--shadow);position:relative;z-index:10;backdrop-filter:blur(8px)}
+    header.topbar{display:flex;align-items:center;gap:18px;padding:18px;border-radius:14px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .brand img{height:56px;width:auto;border-radius:10px;filter:drop-shadow(0 8px 18px rgba(3,33,99,.18))}
+    .brand h1{font-size:20px;margin:0;color:#fff;font-weight:800}
+    .brand p{margin:0;color:rgba(255,255,255,.9);font-size:12px}
+
+    /* animated header gradient */
+    .topbar{background:linear-gradient(90deg,var(--royal-2),var(--royal-3));padding:22px}
+    .top-actions{margin-left:auto;display:flex;gap:12px;align-items:center}
+
+    /* fancy upload cards */
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 10px 40px rgba(2,18,60,.06);border:1px solid rgba(3,57,138,.04);transition:transform .28s ease,box-shadow .28s ease}
+    .card:hover{transform:translateY(-6px);box-shadow:0 30px 70px rgba(2,18,60,.09)}
+    .card h2{margin:0 0 8px 0;color:var(--royal-1);font-size:18px}
+    .card p{margin:0 0 12px 0;color:#6b7a93;font-size:13px}
+
+    /* custom file picker */
+    .file-picker{display:flex;gap:12px;align-items:center}
+    .fake-btn{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--royal-2),var(--royal-3));color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;cursor:pointer;border:none;box-shadow:0 8px 30px rgba(31,66,160,.28)}
+    .fake-btn::after{content:"";position:absolute;top:0;left:-75%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.6),transparent);transform:skewX(-25deg)}
+    .fake-btn:hover::after{animation:shine 0.8s forwards}
+
+    input[type=file]{position:absolute;left:-9999px}
+    .file-meta{font-size:13px;color:#284264}
+
+    /* large process area */
+    .process-area{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+    .process-button{position:relative;overflow:hidden;background:linear-gradient(90deg,var(--royal-3),var(--royal-2));color:#fff;padding:14px 26px;border-radius:12px;border:none;font-weight:800;cursor:pointer;box-shadow:0 18px 40px rgba(10,40,120,.22)}
+    .process-button::after{content:"";position:absolute;top:0;left:-75%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.6),transparent);transform:skewX(-25deg)}
+    .process-button:hover::after{animation:shine 1.2s forwards}
+    .process-button:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+    @keyframes shine{100%{left:125%}}
+
+    /* fancy progress bar */
+    .progress-wrap{width:100%;height:14px;background:linear-gradient(90deg,#eef6ff,#f7fbff);border-radius:999px;padding:3px;border:1px solid rgba(3,57,138,.04);overflow:hidden}
+    .progress{height:100%;width:0;background:linear-gradient(90deg,var(--royal-3),var(--royal-2));border-radius:999px;transition:width .6s cubic-bezier(.2,.9,.2,1)}
+
+    /* status & preview */
+    .status{padding:12px 14px;border-radius:10px;font-weight:600}
+    .status.success{background:#f0fbff;color:var(--royal-2);border:1px solid rgba(37,99,235,.12)}
+    .status.error{background:#fff2f2;color:#9b1f1f;border:1px solid rgba(220,38,38,.08)}
+
+    .preview{margin-top:12px;background:#fff;padding:12px;border-radius:10px;border:1px solid rgba(3,57,138,.04);max-height:320px;overflow:auto}
+    .preview table{width:100%;border-collapse:collapse;font-size:13px}
+    .preview th,.preview td{padding:8px;border-bottom:1px solid #f2f7ff;text-align:left}
+
+    /* download FAB */
+    .fab{position:fixed;right:28px;bottom:28px;background:#fff;border-radius:14px;padding:14px 18px;display:none;gap:12px;align-items:center;box-shadow:0 30px 60px rgba(8,33,99,.18)}
+    .fab .dl{position:relative;overflow:hidden;background:linear-gradient(90deg,var(--royal-3),var(--royal-2));color:#fff;padding:10px 16px;border-radius:10px;font-weight:800;border:none;cursor:pointer}
+    .fab .dl::after{content:"";position:absolute;top:0;left:-75%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.6),transparent);transform:skewX(-25deg)}
+    .fab .dl:hover::after{animation:shine 1.2s forwards}
+
+    /* micro animations */
+    .pulse-ring{position:absolute;right:18px;top:18px;width:10px;height:10px;border-radius:999px;background:#fff;box-shadow:0 0 18px rgba(255,255,255,.2)}
+
+    /* responsive */
+    @media (max-width:880px){.grid{grid-template-columns:1fr}.brand h1{font-size:16px}.app{margin:18px;padding:18px}}
+  
+
+/* === Layout fixes to prevent preview from expanding column width === */
+
+/* Ensure grid children can shrink and respect column sizes */
+.grid > * { min-width: 0; box-sizing: border-box; }
+
+/* Fix columns: left flexible, right fixed so right column won't be squished */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 18px;
+  align-items: start;
+}
+
+/* Cards should allow contents to overflow internally instead of expanding layout */
+.card { min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; }
+
+/* Make file-picker fill available width and stack elements vertically */
+.file-picker { display: flex !important; flex-direction: column; gap: 12px; align-items: stretch; width: 100%; box-sizing: border-box; }
+
+/* Large, almost-full-size drop zones that fill their card column */
+/* Clean drop zone redesign */
+
+/* Clean drop zone redesign with embedded button */
+/* Clean drop zone redesign with embedded button (override previous .drop-zone) */
+.drop-zone {
+  width: 100% !important;
+  min-height: 180px !important;
+  padding: 24px 18px !important;
+  border-radius: 14px !important;
+  border: 2px dashed #e6eefc !important;
+  background: linear-gradient(180deg,#fbfdff,#f8fbff) !important;
+  color: #23374a !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 10px;
+  transition: all 0.18s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.drop-zone:hover,
+.drop-zone.dragover {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 8px 24px rgba(37,99,235,0.08);
+  transform: translateY(-3px);
+}
+
+/* Make the label cover the full zone and be clickable */
+.drop-zone > label {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  cursor: pointer;
 }
 
-.download-button:hover::before {
-    left: 100%;
-}
-
-.download-button:hover {
-    transform: translateY(-3px);
-    background: linear-gradient(135deg, #19398a 0%, #1e40af 100%);
-    color: white;
-    box-shadow: 
-        0 20px 40px rgba(25, 57, 138, 0.4),
-        0 10px 20px rgba(25, 57, 138, 0.3);
-}
-
-.status {
-    margin-top: 24px;
-    padding: 16px 20px;
-    border-radius: 12px;
-    font-weight: 500;
-    font-size: 0.95rem;
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
+/* Visual pieces inside the zone */
+.drop-zone-icon { font-size: 36px; line-height: 1; }
+.drop-zone .dz-title { font-size: 16px; font-weight: 700; }
+.drop-zone .dz-sub { font-size: 12px; color: rgba(35,55,75,0.72); }
 
-.status.success {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    color: #19398a;
-    border: 2px solid #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+/* Embedded button */
+.drop-zone .fake-btn {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: linear-gradient(90deg,#2563eb,#1549c7);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(21,74,199,0.18);
+  cursor: pointer;
+  user-select: none;
 }
+.drop-zone .fake-btn:active { transform: translateY(1px); }
 
-.status.error {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-    color: #dc2626;
-    border: 2px solid #f87171;
-    box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2);
+/* Keep the file-meta visible below the drop zone (small text) */
+.file-meta {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #284264;
+  min-height: 18px;
 }
 
-.status.info {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    color: #1e40af;
-    border: 2px solid #60a5fa;
-    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
-}
-
-.preview {
-    background: white;
-    border: 2px solid #e0f2fe;
-    border-radius: 16px;
-    padding: 24px;
-    margin-top: 24px;
-    max-height: 400px;
-    overflow-y: auto;
-    box-shadow: 
-        inset 0 2px 8px rgba(25, 57, 138, 0.05),
-        0 4px 12px rgba(25, 57, 138, 0.08);
-}
 
-.preview table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
+/* Preview area: constrained width + scroll inside instead of expanding card */
+.card .preview {
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: auto;
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  background: transparent;
+  border-radius: 10px;
 }
 
-.preview th, .preview td {
-    border: 1px solid #e0f2fe;
-    padding: 12px;
-    text-align: left;
+/* Table: allow horizontal scrolling inside preview but do not force container to grow */
+.card .preview table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
 }
 
-.preview th {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    font-weight: 600;
-    color: #1e40af;
-}
+/* Prevent inline-block wide gaps */
+.card .preview td, .card .preview th { white-space: nowrap; padding: 8px; box-sizing: border-box; }
 
-.preview tr:nth-child(even) {
-    background: #f8faff;
-}
+/* Safety: ensure the header/topbar doesn't include a duplicate logo inside the card */
+header.topbar img { display: none; }
 
-.loading {
-    display: none;
-    text-align: center;
-    margin: 32px 0;
-    animation: fadeIn 0.3s ease-out;
+/* Themed scrollbars for preview areas */
+.card .preview::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+.card .preview::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
 }
 
-.spinner {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 16px;
-    border: 4px solid #e0f2fe;
-    border-top: 4px solid #19398a;
-    border-radius: 50%;
-    animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+.card .preview::-webkit-scrollbar-thumb {
+  background: var(--royal-2);
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.card .preview::-webkit-scrollbar-thumb:hover {
+  background: var(--royal-3);
 }
 
-.loading p {
-    color: #475569;
-    font-weight: 500;
-    font-size: 1.1rem;
+/* Firefox support */
+.card .preview {
+  scrollbar-width: thin;
+  scrollbar-color: var(--royal-2) rgba(255, 255, 255, 0.3);
 }
 
-.fixes {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    border: 2px solid #3b82f6;
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-    animation: slideIn 0.5s ease-out;
+html {
+  zoom: 0.9; /* works in Chrome, Edge, Safari */
 }
 
-.fixes h3 {
-    color: #1e40af;
-    margin-bottom: 16px;
-    font-size: 1.2rem;
-    font-weight: 600;
+@supports not (zoom: 0.9) {
+  html {
+    transform: scale(0.9);
+    transform-origin: top center;
+  }
 }
 
-.fixes ul {
-    color: #1e40af;
-    margin-left: 20px;
-}
 
-.fixes li {
-    margin-bottom: 8px;
-    line-height: 1.5;
-}
 
-@media (max-width: 768px) {
-    .container {
-        margin: 10px;
-        border-radius: 20px;
-    }
-    
-    .main-content {
-        padding: 30px 20px;
-    }
-    
-    .step {
-        padding: 30px 20px;
-        margin-bottom: 30px;
-    }
-    
-    .header {
-        padding: 40px 20px;
-    }
-    
-    .header h1 {
-        font-size: 2.5rem;
-    }
-}
 </style>
 </head>
 <body>
-<!-- Animated Background -->
-<div class="bg-animation">
-    <div class="grid-overlay"></div>
-    
-    <!-- Data Flow Lines -->
-    <div class="data-flow"></div>
-    <div class="data-flow"></div>
-    <div class="data-flow"></div>
-    <div class="data-flow"></div>
-    
-    <!-- Tech Accents -->
-    <div class="tech-accent"></div>
-    <div class="tech-accent"></div>
-    <div class="tech-accent"></div>
-</div>
 
-<!-- Splash Screen -->
-<div id="splashScreen" class="splash-screen">
-    <img src="https://i.imgur.com/VIGeC2U.png" alt="Logo" class="splash-logo" id="splashLogo">
-</div>
-
-<div class="container">
-    <div class="header">
-        <img src="https://imgur.com/IrfRmga.png" alt="Company Logo" class="header-logo">
-        <h1>OpenPlay Import Converter</h1>
-        <p>Automatically convert Label Copy spreadsheets to OpenPlay Import Templates</p>
+<body>
+  <div id="splash">
+    <div id="logo-wrapper">
+      <!-- Replace with your hosted image links -->
+      <img id="logo-white" src="https://i.ibb.co/D0VhhDj/undefined-Imgur.png" alt="White Logo">
+      <img id="logo-color" src="https://i.ibb.co/N686F9TG/VIGe-C2-U-Imgur.png" alt="Color Logo">
     </div>
-    
-    <div class="main-content">
-       
-        <div class="step">
-            <h2>Step 1: Upload Label Copy File</h2>
-            <p>Upload your Label Copy Excel file (.xlsx) containing the music release information.</p>
-            <div class="file-upload">
-                <input type="file" id="labelCopyInput" accept=".xlsx,.xls" />
-                <div class="upload-button">Choose Label Copy File</div>
-            </div>
-            <div id="labelCopyStatus"></div>
-            <div id="labelCopyPreview" class="preview" style="display: none;"></div>
-        </div>
-        
-        <div class="step">
-            <h2>Step 2: Upload OpenPlay Template</h2>
-            <p>Upload your empty OpenPlay Import Template (.xlsx) to be populated with the label copy data.</p>
-            <div class="file-upload">
-                <input type="file" id="templateInput" accept=".xlsx,.xls" />
-                <div class="upload-button">Choose OpenPlay Template</div>
-            </div>
-            <div id="templateStatus"></div>
-        </div>
-        
-        <div class="step">
-            <h2>Step 3: Process & Convert</h2>
-            <p>Process the label copy data and generate the populated OpenPlay import template.</p>
-            <button id="processButton" class="process-button" disabled>Process Files</button>
-            
-            <div class="loading" id="loadingIndicator">
-                <div class="spinner"></div>
-                <p>Processing files...</p>
-            </div>
-            
-            <div id="processStatus"></div>
-        </div>
-        
-        <div class="step">
-            <h2>Step 4: Download Result</h2>
-            <p>Download your populated OpenPlay Import Template ready for upload to the system.</p>
-            <button id="downloadButton" class="download-button" style="display: none;">📥 Download Populated Template</button>
-        </div>
-    </div>
+  </div>
+
+<!-- Site header -->
+<div id="siteHeader" style="text-align:center;margin:20px 0;">
+  <img src="https://i.ibb.co/D0VhhDj/undefined-Imgur.png"
+       alt="Logo"
+       style="height:145px;width:auto;
+              filter:drop-shadow(0 12px 30px rgba(3,33,99,0.25));
+              border-radius:10px;
+              padding:1px;">
+</div>
+<main class="app container" role="main">
+<header class="topbar">
+<div class="brand">
+<div>
+<h1>OpenPlay Import Converter</h1>
+<p>Automatically map Label Copy → OpenPlay templates • Universal, robust</p>
+</div>
+</div>
+<div class="top-actions">
+<div class="pulse-ring" title="Live"></div>
+<div style="color:rgba(255,255,255,.95);font-weight:50">v0.9</div>
+</div>
+</header>
+<section class="grid">
+<div class="card">
+<h2>1 • Upload Label Copy</h2>
+<p>Upload the Excel file where your release's track &amp; album data lives.</p>
+
+<div class="file-picker">
+  <div class="drop-zone" id="dropZoneLabel">
+    <label for="labelCopyInputBtn">
+      <div class="drop-zone-icon">📂</div>
+      <div class="dz-title">Drag &amp; drop Label Copy here</div>
+      <div class="dz-sub">(.xlsx / .xls)</div>
+      <div class="fake-btn">Choose file</div>
+    </label>
+    <!-- hidden input MUST keep same id -->
+    <input accept=".xlsx,.xls" id="labelCopyInputBtn" type="file" style="display:none"/>
+  </div>
+
+  <!-- small filename / "no file selected" text stays here -->
+  <div class="file-meta" id="labelCopyMeta">No file selected</div>
 </div>
 
+
+<div id="labelCopyStatusNew" style="margin-top:12px"></div>
+<div class="preview" id="labelCopyPreviewNew" style="display:none"></div>
+</div>
+<div class="card">
+  <h2>2 • Upload OpenPlay Template</h2>
+  <p>Upload an empty OpenPlay import template to be populated.</p>
+
+  <div class="file-picker">
+    <div class="drop-zone" id="dropZoneTemplate">
+      <label for="templateInputBtn">
+        <div class="drop-zone-icon">📁</div>
+        <div class="dz-title">Drag &amp; drop OpenPlay Template here</div>
+        <div class="dz-sub">(.xlsx / .xls)</div>
+        <div class="fake-btn">Choose template</div>
+      </label>
+      <input accept=".xlsx,.xls" id="templateInputBtn" type="file" style="display:none"/>
+    </div>
+    <div class="file-meta" id="templateMeta">No template selected</div>
+  </div>
+
+  <!-- ✅ keep status inside the card, here -->
+  <div id="templateStatusNew" style="margin-top:12px"></div>
+</div>
+
+
+<div id="templateStatusNew" style="margin-top:12px"></div>
+</div>
+<div class="card" style="grid-column:1/3">
+<h2>3 • Convert &amp; Preview</h2>
+<p>When both files are uploaded you can process the data — a download will appear below.</p>
+<div class="process-area">
+<div style="display:flex;gap:12px;align-items:center;">
+<button class="process-button" disabled="" id="processButtonNew">Process files</button>
+<div id="processNote" style="font-size:13px;color:#52719a">Ready when both files present</div>
+</div>
+<div aria-hidden="true" class="progress-wrap" style="margin-top:10px"><div class="progress" id="progressBar"></div></div>
+<div id="processStatusNew"></div>
+<div id="loadingIndicatorNew" style="display:none;margin-top:12px">
+<div style="display:flex;gap:12px;align-items:center"><div style="width:36px;height:36px;border-radius:50%;border:4px solid rgba(37,99,235,.08);border-top-color:var(--royal-3);animation:spin 1s linear infinite"></div><div style="font-weight:700;color:#274a7a">Processing…</div></div>
+</div>
+</div>
+</div>
+</section>
+<div class="card" style="margin-top:18px">
+<h2 style="margin-bottom:6px">Output &amp; Download</h2>
+<p style="margin:0 0 10px 0;color:#556b8a">Once processed, you can download the populated OpenPlay template below.</p>
+<div id="downloadArea"></div>
+</div>
+</main>
+<div aria-hidden="true" class="fab" role="dialog">
+<div style="font-size:13px;color:#28507b">Result ready:</div>
+<button class="dl" id="downloadFab" style="display:none">Download</button>
+</div>
 <script>
-// Splash screen functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const splashScreen = document.getElementById('splashScreen');
-    const container = document.querySelector('.container');
-    
-    // Show splash screen for 2.5 seconds total (0.5s entrance + 1.5s display + 0.5s fade)
+  window.addEventListener("load", () => {
+    const splash = document.getElementById("splash");
+    const content = document.getElementById("content");
+
+    // Start transition quickly
+     setTimeout(() => {
+      splash.classList.add("transition");
+    }, 400);
+
+    // Fade out sooner (~2s total)
     setTimeout(() => {
-        // Start fade out
-        splashScreen.classList.add('fade-out');
-        
-        // Show main content
-        setTimeout(() => {
-            container.classList.add('show');
-            // Remove splash screen from DOM after animation
-            setTimeout(() => {
-                splashScreen.remove();
-            }, 800);
-        }, 200);
+      splash.classList.add("fade-out");
+      content.style.display = "block";
     }, 2000);
+  });
+  </script>
+  <script>
+    // Add spin animation
+    const style = document.createElement('style'); 
+    style.innerHTML='@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}'; 
+    document.head.appendChild(style);
+
+// Application variables
+let labelCopyData = null;
+let templateWorkbook = null;
+let processedWorkbook = null;
+let columnMapping = null;
+let templateStructure = null;
+
+// File upload handlers - FIXED TO USE CORRECT IDs
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('labelCopyInputBtn').addEventListener('change', handleLabelCopyUpload);
+    document.getElementById('templateInputBtn').addEventListener('change', handleTemplateUpload);
+    document.getElementById('processButtonNew').addEventListener('click', processFiles);
+    
+    // Add FAB download functionality
+    document.getElementById('downloadFab').addEventListener('click', downloadResult);
 });
 
+function handleLabelCopyUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Update file meta display
+    document.getElementById('labelCopyMeta').textContent = file.name;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const workbook = XLSX.read(e.target.result, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            labelCopyData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
+           
+            document.getElementById('labelCopyStatusNew').innerHTML =
+                `<div class="status success">✅ Label Copy loaded successfully! Found ${labelCopyData.length} rows of data.</div>`;
+           
+            showLabelCopyPreview();
+            checkReadyToProcess();
+        } catch (error) {
+            document.getElementById('labelCopyStatusNew').innerHTML =
+                `<div class="status error">❌ Error reading file: ${error.message}</div>`;
+        }
+    };
+   
+    reader.readAsBinaryString(file);
+}
 
-        </script>
+function handleTemplateUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Update file meta display
+    document.getElementById('templateMeta').textContent = file.name;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            templateWorkbook = XLSX.read(e.target.result, { type: 'binary' });
+           
+            // Analyze template structure for future-proofing
+            templateStructure = analyzeTemplateStructure(templateWorkbook);
+           
+            document.getElementById('templateStatusNew').innerHTML =
+                `<div class="status success">✅ OpenPlay template loaded successfully! Found ${templateWorkbook.SheetNames.length} sheets.</div>`;
+           
+            checkReadyToProcess();
+        } catch (error) {
+            document.getElementById('templateStatusNew').innerHTML =
+                `<div class="status error">❌ Error reading template: ${error.message}</div>`;
+        }
+    };
+    reader.readAsBinaryString(file);
+}
+
+function analyzeTemplateStructure(workbook) {
+    const structure = {
+        sheets: {},
+        version: 'unknown',
+        headerRows: {}
+    };
+
+    // tokens that indicate header-like cells (lowercase)
+    const headerTokens = [
+        'artist', 'artist name', 'ipi', 'publisher', 'publisher id',
+        'track', 'track id', 'album', 'album id', 'title', 'isrc', 'work', 'name', 'id'
+    ];
+
+    workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+
+        let headerRow = -1;
+        let bestScore = 0;
+        let firstNonEmpty = -1;
+        let maxNonEmptyCount = 0;
+
+        const rowsToScan = Math.min(20, data.length || 20);
+        for (let i = 0; i < rowsToScan; i++) {
+            const row = data[i] || [];
+            const rowStrings = row.map(cell => (cell === null || cell === undefined) ? '' : String(cell).toLowerCase());
+            const nonEmptyCount = rowStrings.filter(s => s && s.trim()).length;
+
+            if (nonEmptyCount > 0 && firstNonEmpty === -1) firstNonEmpty = i;
+            if (nonEmptyCount > maxNonEmptyCount) maxNonEmptyCount = nonEmptyCount;
+
+            // score this row by header token matches
+            let score = 0;
+            for (const cellText of rowStrings) {
+                for (const tk of headerTokens) {
+                    if (cellText.includes(tk)) score += 1;
+                }
+            }
+
+            // prefer rows with higher score, and prefer higher nonEmptyCount as tie-breaker
+            if (score > bestScore || (score === bestScore && nonEmptyCount > (data[headerRow] || []).filter(Boolean).length)) {
+                bestScore = score;
+                headerRow = i;
+            }
+        }
+
+        // Fallback: if we found no token matches, take first non-empty row (if any)
+        if (headerRow === -1) {
+            headerRow = (firstNonEmpty !== -1) ? firstNonEmpty : 0;
+        }
+
+        structure.sheets[sheetName] = {
+            exists: true,
+            headerRow: headerRow,
+            headers: data[headerRow] || [],
+            totalRows: data.length,
+            dataStartRow: headerRow + 2,
+            rawData: data
+        };
+        structure.headerRows[sheetName] = headerRow;
+    });
+
+    // detect version as before
+    if (workbook.SheetNames.includes('MapPublisherToWork') &&
+        workbook.SheetNames.includes('AlbumPrimaryContributions')) {
+        structure.version = 'v2024_new';
+    } else if (workbook.SheetNames.includes('Publishers')) {
+        structure.version = 'v2024_old';
+    } else {
+        structure.version = 'legacy';
+    }
+
+    console.log('Template structure analyzed:', structure);
+    return structure;
+}
+
+function showLabelCopyPreview() {
+    if (!labelCopyData || labelCopyData.length < 2) return;
+   
+    const preview = document.getElementById('labelCopyPreviewNew');
+    let html = '<h3>Preview of Label Copy Data:</h3><table>';
+   
+    // Show headers
+    html += '<tr>';
+    labelCopyData[1].slice(0, 10).forEach(header => {
+        html += `<th>${header || 'Empty'}</th>`;
+    });
+    html += '<th>...</th></tr>';
+   
+    // Show first few data rows
+    for (let i = 4; i < Math.min(labelCopyData.length, 8); i++) {
+        html += '<tr>';
+        labelCopyData[i].slice(0, 10).forEach(cell => {
+            html += `<td>${cell || ''}</td>`;
+        });
+        html += '<td>...</td></tr>';
+    }
+   
+    html += '</table>';
+    preview.innerHTML = html;
+    preview.style.display = 'block';
+}
+
+function checkReadyToProcess() {
+    const button = document.getElementById('processButtonNew');
+    const note = document.getElementById('processNote');
+    if (labelCopyData && templateWorkbook) {
+        button.disabled = false;
+        note.textContent = 'Ready to process!';
+        note.style.color = '#2563eb';
+    }
+}
+
+function processFiles() {
+    if (!labelCopyData || !templateWorkbook) return;
+   
+    document.getElementById('loadingIndicatorNew').style.display = 'block';
+    document.getElementById('processButtonNew').disabled = true;
+    
+    // Animate progress bar
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = '0%';
+    
+    setTimeout(() => progressBar.style.width = '30%', 100);
+    setTimeout(() => progressBar.style.width = '60%', 500);
+    setTimeout(() => progressBar.style.width = '90%', 1000);
+   
+    try {
+        // Clone the template workbook
+        processedWorkbook = XLSX.utils.book_new();
+       
+        // Copy all sheets from template
+        templateWorkbook.SheetNames.forEach(sheetName => {
+            const originalSheet = templateWorkbook.Sheets[sheetName];
+            const originalData = XLSX.utils.sheet_to_json(originalSheet, { header: 1, defval: "" });
+            const newSheet = XLSX.utils.aoa_to_sheet(originalData);
+            XLSX.utils.book_append_sheet(processedWorkbook, newSheet, sheetName);
+        });
         
-
-    <script>
-        let labelCopyData = null;
-        let templateWorkbook = null;
-        let processedWorkbook = null;
-        let columnMapping = null;
-        let templateStructure = null;
-
-        // File upload handlers
-        document.getElementById('labelCopyInput').addEventListener('change', handleLabelCopyUpload);
-        document.getElementById('templateInput').addEventListener('change', handleTemplateUpload);
-        document.getElementById('processButton').addEventListener('click', processFiles);
-        document.getElementById('downloadButton').addEventListener('click', downloadResult);
-
-        function handleLabelCopyUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const workbook = XLSX.read(e.target.result, { type: 'binary' });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    labelCopyData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
-                   
-                    document.getElementById('labelCopyStatus').innerHTML =
-                        `<div class="status success">✅ Label Copy loaded successfully! Found ${labelCopyData.length} rows of data.</div>`;
-                   
-                    showLabelCopyPreview();
-                    checkReadyToProcess();
-                } catch (error) {
-                    document.getElementById('labelCopyStatus').innerHTML =
-                        `<div class="status error">❌ Error reading file: ${error.message}</div>`;
-                }
-            };
+        // Process the data with the new future-proof approach
+        populateTemplateUniversal();
+       
+        setTimeout(() => {
+            progressBar.style.width = '100%';
+            document.getElementById('processStatusNew').innerHTML =
+                `<div class="status success">✅ Processing completed successfully! Template populated with ${getUniqueTrackCount()} unique tracks.</div>`;
            
-            reader.readAsBinaryString(file);
+            // Show download options
+            showDownloadOptions();
+            
+            document.getElementById('loadingIndicatorNew').style.display = 'none';
+        }, 1500);
+       
+    } catch (error) {
+        document.getElementById('processStatusNew').innerHTML =
+            `<div class="status error">❌ Error processing files: ${error.message}</div>`;
+        console.error('Processing error:', error);
+        document.getElementById('loadingIndicatorNew').style.display = 'none';
+        progressBar.style.width = '0%';
+    }
+}
+
+function showDownloadOptions() {
+    const downloadArea = document.getElementById('downloadArea');
+    downloadArea.innerHTML = `
+        <div style="display:flex;gap:12px;align-items:center;margin-top:12px;">
+            <button onclick="downloadResult()" style="background:linear-gradient(90deg,var(--royal-3),var(--royal-2));color:#fff;padding:12px 20px;border-radius:10px;border:none;font-weight:700;cursor:pointer;">
+                Download Populated Template
+            </button>
+            <div style="font-size:13px;color:#52719a;">
+                Ready for OpenPlay import
+            </div>
+        </div>
+    `;
+    
+    // Show and enable FAB
+    const fab = document.querySelector('.fab');
+    const fabButton = document.getElementById('downloadFab');
+    fab.style.display = 'flex';
+    fabButton.style.display = 'inline-block';
+}
+
+// Rest of the processing functions remain the same...
+function getUniqueTrackCount() {
+    if (!columnMapping || columnMapping.isrcCode === -1) return 0;
+    const dataRows = labelCopyData.slice(4);
+    const uniqueISRCs = new Set();
+    dataRows.forEach(row => {
+        const isrc = row[columnMapping.isrcCode];
+        if (isrc && isrc.trim()) {
+            uniqueISRCs.add(isrc.trim());
         }
+    });
+    return uniqueISRCs.size;
+}
 
-        function handleTemplateUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    templateWorkbook = XLSX.read(e.target.result, { type: 'binary' });
-                   
-                    // Analyze template structure for future-proofing
-                    templateStructure = analyzeTemplateStructure(templateWorkbook);
-                   
-                    document.getElementById('templateStatus').innerHTML =
-                        `<div class="status success">✅ OpenPlay template loaded successfully! Found ${templateWorkbook.SheetNames.length} sheets.</div>`;
-                   
-                    checkReadyToProcess();
-                } catch (error) {
-                    document.getElementById('templateStatus').innerHTML =
-                        `<div class="status error">❌ Error reading template: ${error.message}</div>`;
-                }
-            };
-            reader.readAsBinaryString(file);
+function createColumnMapping(headerRow) {
+    const mapping = {};
+    const columnDefinitions = {
+        'recordLabel': ['Record Label', 'Label'],
+        'productTitle': ['Product Title', 'Album Title', 'Album'],
+        'productPrimaryArtist': ['Product Primary Artist', 'Album Artist', 'Primary Artist'],
+        'barcode': ['Barcode/UPC', 'UPC', 'Barcode', 'EAN'],
+        'catalogueNumber': ['Catalogue Number', 'Catalog Number', 'Cat No'],
+        'format': ['Format'],
+        'productType': ['Product Type'],
+        'productPYear': ['Product (P) Year', 'P Year', 'P-Year', 'pline year'],
+        'productPHolder': ['Product (P) Holder', 'P Holder', 'P-Holder', 'pline owner'],
+        'productCYear': ['Product (C) Year', 'C Year', 'C-Year', 'cline year'],
+        'productCHolder': ['Product (C) Holder', 'C Holder', 'C-Holder', 'cline owner'],
+        'releaseDate': ['Release Date', 'Date'],
+        'productGenre': ['Product Genre', 'Genre', 'Primary Genre'],
+        'volumeNo': ['Volume No.', 'Volume', 'Disc No.', 'Disc Number'],
+        'sides': ['Sides (if vinyl)', 'Sides', 'Side'],
+        'trackNo': ['Track No.', 'Track Number', '#', 'Track Seq'],
+        'trackPrimaryArtist': ['Track Primary Artist', 'Artist', 'Track Artist', 'Primary Artist'],
+        'trackMainTitle': ['Track Main Title', 'Song Title', 'Track Title', 'Main Title', 'Title'],
+        'trackTitleVersion': ['Track Title Version', 'Version', 'Mix'],
+        'trackPYear': ['Track (P) Year', 'Track P Year'],
+        'trackPHolder': ['Track (P) Holder', 'Track P Holder'],
+        'trackCYear': ['Track (C) Year', 'Track C Year'],
+        'trackCHolder': ['Track (C) Holder', 'Track C Holder'],
+        'isrcCode': ['ISRC Code', 'ISRC', 'isrc code', 'Isrc Code', 'ISRC CODE', 'isrc_code'],
+        'trackDuration': ['Track Duration', 'Duration', 'Length', 'Time'],
+        'trackLanguage': ['Audio Language', 'Language', 'Track Language'],
+        'individualPerformer': ['Individual Performer', 'Performer', 'Musicians', 'Performers'],
+        'performerInstrumentRole': ['Performer Instrument Role', 'Instrument', 'Role', 'Instrument Role'],
+        'producer': ['Producer', 'Produced By'],
+        'recordingEngineer': ['Recording Engineer', 'Engineer', 'Recorded By'],
+        'mixer': ['Mixer', 'Mixed By'],
+        'mixEngineer': ['Mix Engineer', 'Mixing Engineer'],
+        'mixedAt': ['Mixed At', 'Mix Location', 'Mixed @'],
+        'recordedAt': ['Recorded At', 'Recording Location', 'Recorded @'],
+        'sampleInfo': ['Sample Info', 'Samples'],
+        'masteringEngineer': ['Mastering Engineer', 'Mastered By'],
+        'masteredAt': ['Mastered At', 'Mastering Location', 'Mastered @'],
+        'writer': ['Writer / Composer', 'Writer', 'Composer', 'Written By'],
+        'publisher': ['Publisher', 'Published By']
+    };
+    
+    // Enhanced search with fuzzy matching
+    Object.keys(columnDefinitions).forEach(key => {
+        const searchTerms = columnDefinitions[key];
+        let foundIndex = -1;
+       
+        // Exact match first
+        for (const term of searchTerms) {
+            foundIndex = headerRow.findIndex(header =>
+                String(header).toLowerCase().trim() === term.toLowerCase()
+            );
+            if (foundIndex !== -1) break;
         }
-
-        /* REPLACE existing analyzeTemplateStructure(...) WITH THIS */
-        function analyzeTemplateStructure(workbook) {
-            const structure = {
-                sheets: {},
-                version: 'unknown',
-                headerRows: {}
-            };
-
-            // tokens that indicate header-like cells (lowercase)
-            const headerTokens = [
-                'artist', 'artist name', 'ipi', 'publisher', 'publisher id',
-                'track', 'track id', 'album', 'album id', 'title', 'isrc', 'work', 'name', 'id'
-            ];
-
-            workbook.SheetNames.forEach(sheetName => {
-                const sheet = workbook.Sheets[sheetName];
-                const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-
-                let headerRow = -1;
-                let bestScore = 0;
-                let firstNonEmpty = -1;
-                let maxNonEmptyCount = 0;
-
-                const rowsToScan = Math.min(20, data.length || 20);
-                for (let i = 0; i < rowsToScan; i++) {
-                    const row = data[i] || [];
-                    const rowStrings = row.map(cell => (cell === null || cell === undefined) ? '' : String(cell).toLowerCase());
-                    const nonEmptyCount = rowStrings.filter(s => s && s.trim()).length;
-
-                    if (nonEmptyCount > 0 && firstNonEmpty === -1) firstNonEmpty = i;
-                    if (nonEmptyCount > maxNonEmptyCount) maxNonEmptyCount = nonEmptyCount;
-
-                    // score this row by header token matches
-                    let score = 0;
-                    for (const cellText of rowStrings) {
-                        for (const tk of headerTokens) {
-                            if (cellText.includes(tk)) score += 1;
-                        }
-                    }
-
-                    // prefer rows with higher score, and prefer higher nonEmptyCount as tie-breaker
-                    if (score > bestScore || (score === bestScore && nonEmptyCount > (data[headerRow] || []).filter(Boolean).length)) {
-                        bestScore = score;
-                        headerRow = i;
-                    }
-                }
-
-                // Fallback: if we found no token matches, take first non-empty row (if any)
-                if (headerRow === -1) {
-                    headerRow = (firstNonEmpty !== -1) ? firstNonEmpty : 0;
-                }
-
-                structure.sheets[sheetName] = {
-                    exists: true,
-                    headerRow: headerRow,
-                    headers: data[headerRow] || [],
-                    totalRows: data.length,
-                    dataStartRow: headerRow + 2,
-                    rawData: data
-                };
-                structure.headerRows[sheetName] = headerRow;
-            });
-
-            // detect version as before
-            if (workbook.SheetNames.includes('MapPublisherToWork') &&
-                workbook.SheetNames.includes('AlbumPrimaryContributions')) {
-                structure.version = 'v2024_new';
-            } else if (workbook.SheetNames.includes('Publishers')) {
-                structure.version = 'v2024_old';
-            } else {
-                structure.version = 'legacy';
+       
+        // Fuzzy match if exact not found
+        if (foundIndex === -1) {
+            for (const term of searchTerms) {
+                foundIndex = headerRow.findIndex(header =>
+                    String(header).toLowerCase().includes(term.toLowerCase().split(' ')[0])
+                );
+                if (foundIndex !== -1) break;
             }
-
-            console.log('Template structure analyzed:', structure);
-            return structure;
         }
+       
+        mapping[key] = foundIndex;
+    });
+    return mapping;
+}
 
+function populateTemplateUniversal() {
+    // Create dynamic column mapping
+    const cols = createColumnMapping(labelCopyData[1]);
+    columnMapping = cols;
+   
+    console.log('Column mapping created:', cols);
+   
+    // Validate required columns
+    const requiredFields = ['isrcCode', 'trackMainTitle', 'trackPrimaryArtist'];
+    const missingFields = requiredFields.filter(field => cols[field] === -1);
+   
+    if (missingFields.length > 0) {
+        throw new Error(`Missing required columns: ${missingFields.join(', ')}. Please check your file format.`);
+    }
+   
+    // Extract data from label copy (assuming data starts at row 4)
+    const dataRows = labelCopyData.slice(4);
+   
+    // Create unique tracks map
+    const uniqueTracks = new Map();
+    const isrcToTrackId = new Map();
+    let trackIdCounter = 1;
+   
+    // Process unique tracks
+    dataRows.forEach((row, index) => {
+        const isrc = row[cols.isrcCode];
+        const title = row[cols.trackMainTitle];
+       
+        if (isrc && isrc.trim() && title && title.trim()) {
+            if (!uniqueTracks.has(isrc)) {
+                const trackId = `TRACK${String(trackIdCounter).padStart(3, '0')}`;
+                uniqueTracks.set(isrc, createTrackObject(row, cols, trackId));
+                isrcToTrackId.set(isrc, trackId);
+                trackIdCounter++;
+            }
+        }
+    });
+   
+    console.log(`Created ${uniqueTracks.size} unique tracks from ${dataRows.length} rows`);
+   
+    // Populate sheets based on template structure
+    populateSheetUniversal('Albums', createAlbumData(dataRows, cols));
+    populateSheetUniversal('Tracks', createTrackData(uniqueTracks));
+    populateSheetUniversal('Works', createWorkData(uniqueTracks));
+    populateSheetUniversal('Artists', createArtistData(dataRows, cols, uniqueTracks));
+   
+    // Handle new/old template differences
+    if (templateStructure.version === 'v2024_new') {
+        populateSheetUniversal('Publishers', createPublisherData(uniqueTracks));
+        populateSheetUniversal('MapPublisherToWork', createPublisherWorkMapping(uniqueTracks));
+        populateSheetUniversal('AlbumPrimaryContributions', createAlbumPrimaryContributions(dataRows, cols));
+    }
+   
+    // Universal mapping sheets
+    populateUniversalMappings(uniqueTracks, dataRows, cols);
+    populateUniversalContributions(uniqueTracks);
+}
 
-        function showLabelCopyPreview() {
-            if (!labelCopyData || labelCopyData.length < 2) return;
-           
-            const preview = document.getElementById('labelCopyPreview');
-            let html = '<h3>Preview of Label Copy Data:</h3><table>';
-           
-            // Show headers
-            html += '<tr>';
-            labelCopyData[1].slice(0, 10).forEach(header => {
-                html += `<th>${header || 'Empty'}</th>`;
-            });
-            html += '<th>...</th></tr>';
-           
-            // Show first few data rows
-            for (let i = 4; i < Math.min(labelCopyData.length, 8); i++) {
-                html += '<tr>';
-                labelCopyData[i].slice(0, 10).forEach(cell => {
-                    html += `<td>${cell || ''}</td>`;
+function createTrackObject(row, cols, trackId) {
+    return {
+        trackId: trackId,
+        title: row[cols.trackMainTitle] || '',
+        artist: row[cols.trackPrimaryArtist] || '',
+        isrc: row[cols.isrcCode] || '',
+        version: row[cols.trackTitleVersion] || '',
+        duration: row[cols.trackDuration] || '',
+        pYear: row[cols.trackPYear] || '',
+        pHolder: row[cols.trackPHolder] || '',
+        cYear: row[cols.trackCYear] || '',
+        cHolder: row[cols.trackCHolder] || '',
+        language: row[cols.trackLanguage] || 'English',
+        genre: row[cols.productGenre] || '',
+        label: row[cols.recordLabel] || '',
+        albumInfo: {
+            title: row[cols.productTitle] || '',
+            barcode: row[cols.barcode] || '',
+            volume: row[cols.volumeNo] || 1,
+            side: row[cols.sides] || '',
+            trackNo: row[cols.trackNo] || ''
+        },
+        contributors: {
+            performers: row[cols.individualPerformer] || '',
+            roles: row[cols.performerInstrumentRole] || '',
+            producer: row[cols.producer] || '',
+            engineer: row[cols.recordingEngineer] || '',
+            mixer: row[cols.mixer] || '',
+            mixEngineer: row[cols.mixEngineer] || '',
+            masteringEngineer: row[cols.masteringEngineer] || '',
+            writer: row[cols.writer] || '',
+            publisher: row[cols.publisher] || ''
+        }
+    };
+}
+
+function populateSheetUniversal(sheetName, data) {
+    if (!templateStructure.sheets[sheetName] || !templateStructure.sheets[sheetName].exists) {
+        console.warn(`Sheet ${sheetName} not found in template`);
+        return;
+    }
+
+    const sheet = processedWorkbook.Sheets[sheetName];
+    // Read current sheet data (copied from original template earlier)
+    const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+    const structure = templateStructure.sheets[sheetName];
+    const startRow = structure.dataStartRow;
+
+    // Preserve everything up to startRow (this keeps all header rows + any instructional rows)
+    const preservedRows = sheetData.slice(0, startRow);
+
+    // Build new data rows ensuring each row is at least as wide as template headers
+    const templateHeaders = structure.headers || [];
+    const newRows = data.map(rowData => {
+        const row = Array.isArray(rowData) ? rowData.slice() : (Array.from(rowData) || []);
+        // expand to match header length (avoid truncating header columns)
+        while (row.length < templateHeaders.length) row.push('');
+        return row;
+    });
+
+    // Recombine: preserved header rows + new data rows
+    const finalSheetData = preservedRows.concat(newRows);
+
+    // Write back to the processed workbook sheet
+    processedWorkbook.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(finalSheetData);
+}
+
+// Helper: get the machine header row (row 1) or fall back to the display header
+function getMachineHeaders(sheetName) {
+    const s = templateStructure.sheets[sheetName];
+    if (!s) return [];
+    // Prefer rawData[0] (machine keys) if available, otherwise use the found header row
+    return (s.rawData && s.rawData[0]) ? s.rawData[0].map(h => String(h || '').trim()) :
+        (s.headers || []).map(h => String(h || '').trim());
+}
+
+// Helper: generic mapper that tries exact machine-key mapping first, then token matches
+function valueForHeaderKey(headerKey, valueMap) {
+    const key = String(headerKey || '').toLowerCase();
+    if (!key) return '';
+    const k = key.replace(/[^a-z0-9]/g, '');
+
+    // --- Core IDs & Titles ---
+    if (key.includes('project_import_id')) return ''; // never populate Project IDs
+    if (key.includes('import_id')) return valueMap.import_id || '';
+    if (key === 'title' || key === 'name') return valueMap.title || '';
+    if (key.includes('import_display_title')) return valueMap.import_display_title || '';
+    if (key.includes('version') && key.includes('display')) return valueMap.import_version_display_title || '';
+    if (key.includes('version')) return valueMap.version || '';
+
+    // --- Config / Label / Identifiers ---
+    if (key.includes('configuration') || key === 'format' || key === 'configuration_code') return valueMap.configuration || valueMap.configuration_code || '';
+    if (key.includes('label') && key.includes('import')) return valueMap.import_label || '';
+    if (key.includes('display_label') || key.includes('marketing label')) return valueMap.display_label || '';
+    if (key.includes('upc') || key.includes('ean')) return valueMap.upc || valueMap.upc_number || '';
+    if (key.includes('release_number') || key.includes('catalog')) return valueMap.catalog || valueMap.release_number || '';
+
+    // --- Flags ---
+    if (key.includes('promotional')) return valueMap.promotional || '';
+    if (key.includes('box_set')) return valueMap.box_set || '';
+    if (key.includes('indie_exclusive')) return valueMap.indie_exclusive || '';
+    if (key.includes('is_reissue')) return valueMap.is_reissue || '';
+
+    // --- Genres ---
+    if (key.includes('primary_genre') && !key.includes('sub')) return valueMap.primary_genre_code || valueMap.genre || '';
+    if (key.includes('primary_sub_genre') || key.includes('sub_genre')) return valueMap.primary_sub_genre_code || valueMap.subGenre || '';
+
+    // --- Dates ---
+    if (key.includes('original_release_date')) return valueMap.original_release_date || valueMap.release_date || '';
+    if (key === 'release_date') return valueMap.release_date || '';
+
+    // --- P-Line ---
+    if (k.includes('plineyear') || key.includes('p-year') || key.includes('p_year'))
+        return valueMap.pline_year || valueMap.pYear || '';
+
+    if (k.includes('plineowner') || k.includes('pholder') || k.includes('powner'))
+        return valueMap.pline_owner || valueMap.pHolder || valueMap.p_owner || '';
+
+    // --- C-Line ---
+    if (k.includes('clineyear') || key.includes('c-year') || key.includes('c_year'))
+        return valueMap.cline_year || valueMap.cYear || '';
+
+    if (k.includes('clineowner') || k.includes('cholder') || k.includes('cowner'))
+        return valueMap.cline_owner || valueMap.cHolder || valueMap.c_owner || '';
+
+    // --- Recording dates ---
+    if (k.includes('recordingenddateyear'))
+        return valueMap.pline_year || valueMap.pYear || '';   
+
+    // --- Languages ---
+    if (key.includes('audio_language')) return valueMap.audio_language || 'English';
+    if (key.includes('metadata_language_country')) return valueMap.metadata_language_country || 'United Kingdom';
+    if (key.includes('metadata_language')) return valueMap.metadata_language || 'English';
+
+    // --- Tracks ---
+    if (key.includes('isrc')) return valueMap.isrc || '';
+    if (key.includes('track_type')) return valueMap.track_type || '';
+    if (key.includes('video_type')) return valueMap.video_type || '';
+    if (key.includes('parental_advisory')) return valueMap.parental_advisory || '';
+    if (key.includes('length')) return valueMap.length || '';
+
+    // --- Misc ---
+    if (key.includes('keywords')) return valueMap.keywords || '';
+    if (key.includes('notes')) return valueMap.notes || '';
+
+    // --- Fallbacks ---
+    if (key.includes('genre')) return valueMap.genre || '';
+    if (key.includes('label')) return valueMap.label || '';
+    if (key.includes('artist')) return valueMap.artist || '';
+    if (key.includes('work')) return valueMap.work || '';
+
+    return '';
+}
+
+function createAlbumData(dataRows, cols) {
+    const albums = new Map();
+
+    dataRows.forEach(row => {
+        const title = row[cols.productTitle];
+        const barcode = row[cols.barcode];
+        if (title && title.toString().trim() && barcode && barcode.toString().trim()) {
+            const albumKey = `${title}_${barcode}`;
+            if (!albums.has(albumKey)) {
+                albums.set(albumKey, {
+                    title: title,
+                    artist: row[cols.productPrimaryArtist] || '',
+                    upc: barcode,
+                    catalog: row[cols.catalogueNumber] || '',
+                    format: row[cols.format] || 'Digital Album',
+                    genre: row[cols.productGenre] || '',
+                    releaseDate: formatDate(row[cols.releaseDate]) || '',
+                    pYear: row[cols.productPYear] || '',
+                    pHolder: row[cols.productPHolder] || '',
+                    cYear: row[cols.productCYear] || '',
+                    cHolder: row[cols.productCHolder] || '',
+                    label: row[cols.recordLabel] || ''
                 });
-                html += '<td>...</td></tr>';
-            }
-           
-            html += '</table>';
-            preview.innerHTML = html;
-            preview.style.display = 'block';
-        }
-
-        function checkReadyToProcess() {
-            const button = document.getElementById('processButton');
-            if (labelCopyData && templateWorkbook) {
-                button.disabled = false;
             }
         }
+    });
 
-        function processFiles() {
-            if (!labelCopyData || !templateWorkbook) return;
-           
-            document.getElementById('loadingIndicator').style.display = 'block';
-            document.getElementById('processButton').disabled = true;
-           
-            try {
-                // Clone the template workbook
-                processedWorkbook = XLSX.utils.book_new();
-               
-                // Copy all sheets from template
-                templateWorkbook.SheetNames.forEach(sheetName => {
-                    const originalSheet = templateWorkbook.Sheets[sheetName];
-                    const originalData = XLSX.utils.sheet_to_json(originalSheet, { header: 1, defval: "" });
-                    const newSheet = XLSX.utils.aoa_to_sheet(originalData);
-                    XLSX.utils.book_append_sheet(processedWorkbook, newSheet, sheetName);
-                });
-                // Process the data with the new future-proof approach
-                populateTemplateUniversal();
-               
-                document.getElementById('processStatus').innerHTML =
-                    `<div class="status success">✅ Processing completed successfully! Template populated with ${getUniqueTrackCount()} unique tracks.</div>`;
-               
-                document.getElementById('downloadButton').style.display = 'inline-block';
-               
-            } catch (error) {
-                document.getElementById('processStatus').innerHTML =
-                    `<div class="status error">❌ Error processing files: ${error.message}</div>`;
-                console.error('Processing error:', error);
-            } finally {
-                document.getElementById('loadingIndicator').style.display = 'none';
+    const albumData = [];
+    let albumIdCounter = 1;
+
+    const machineHeaders = getMachineHeaders('Albums');
+
+    albums.forEach((album, key) => {
+        const albumId = `ALBUM${String(albumIdCounter).padStart(3, '0')}`;
+
+        // value map for token lookups
+        const v = {
+            import_id: albumId,
+            title: album.title,
+            import_display_title: '',
+            configuration: album.format,
+            version: '',
+            import_version_display_title: '',
+            import_label: album.label,
+            display_label: '',
+            wmg_distribution_group_code: '',
+            upc_number: album.upc,
+            release_number: album.catalog,
+            promotional: '',
+            box_set: '',
+            indie_exclusive: '',
+            primary_genre_code: album.genre,
+            primary_sub_genre_code: '',
+            original_release_date: album.releaseDate,
+            release_date: album.releaseDate,
+            is_reissue: '',
+            pline_year: album.pYear,
+            pline_owner: album.pHolder || '',
+            pHolder: album.pHolder || '',
+            cline_year: album.cYear,
+            cline_owner: album.cHolder || '',
+            cHolder: album.cHolder || '',
+            wmg_metadata_language_code: 'English',
+            metadata_language_country_code: ''
+        };
+
+        // Build row by iterating template machine headers
+        const row = machineHeaders.map(h => valueForHeaderKey(h, v));
+        albumData.push(row);
+        albumIdCounter++;
+    });
+
+    return albumData;
+}
+
+function createTrackData(uniqueTracks) {
+    const trackData = [];
+    const machineHeaders = getMachineHeaders('Tracks');
+
+    uniqueTracks.forEach((track, isrc) => {
+        const duration = formatDuration(track.duration);
+
+        const v = {
+            import_id: track.trackId,
+            title: track.title,
+            import_display_title: '',
+            isrc: track.isrc,
+            version: track.version,
+            import_version_display_title: '',
+            import_label: track.label,
+            wmg_distribution_group_code: '',
+            track_type: 'Audio',
+            configuration: '',
+            video_type: '',
+            parental_advisory: '',
+            primary_genre_code: track.genre,
+            primary_sub_genre_code: '',
+            import_music_type: '',
+            length: duration,
+            pline_year: track.pYear,
+            pline_owner: track.pHolder,
+            pHolder: track.pHolder,
+            cline_year: track.cYear,
+            cline_owner: track.cHolder,
+            cHolder: track.cHolder,
+            audio_language: 'English',
+            metadata_language: 'English',
+            metadata_language_country: 'United Kingdom'
+        };
+
+        const row = machineHeaders.map(h => valueForHeaderKey(h, v));
+        trackData.push(row);
+    });
+
+    return trackData;
+}
+
+function createWorkData(uniqueTracks) {
+    const workData = [];
+   
+    uniqueTracks.forEach((track, isrc) => {
+        const workId = track.trackId.replace('TRACK', 'WORK');
+       
+        const workRow = [
+            workId, // import_id
+            track.title, // title
+            'Pop', // import_music_type
+            '', // iswc
+            '', // label_work_code
+            '', // copyright_year
+            'English', // wmg_language_code
+            '', // agency
+            '' // description
+        ];
+       
+        workData.push(workRow);
+    });
+   
+    return workData;
+}
+
+function createArtistData(dataRows, cols, uniqueTracks) {
+    const artists = new Set();
+   
+    // Add primary artists
+    dataRows.forEach(row => {
+        if (row[cols.productPrimaryArtist] && row[cols.productPrimaryArtist].trim()) {
+            artists.add(row[cols.productPrimaryArtist].trim());
+        }
+        if (row[cols.trackPrimaryArtist] && row[cols.trackPrimaryArtist].trim()) {
+            artists.add(row[cols.trackPrimaryArtist].trim());
+        }
+    });
+   
+    // Add contributors from unique tracks
+    uniqueTracks.forEach((track) => {
+        if (track.contributors.performers && track.contributors.performers.trim()) {
+            const performerNames = track.contributors.performers.split('|').map(name => name.trim()).filter(name => name);
+            performerNames.forEach(name => artists.add(name));
+        }
+       
+        // Add other contributors
+        Object.values(track.contributors).forEach(contributorString => {
+            if (contributorString && contributorString.trim()) {
+                const contributors = contributorString.split(/[,;]/).map(name => name.trim()).filter(name => name);
+                contributors.forEach(name => artists.add(name));
             }
+        });
+    });
+    const artistData = [];
+    artists.forEach(artist => {
+        artistData.push([
+            artist, // name
+            '', // ipi_name_numbers
+            '' // empty column
+        ]);
+    });
+    return artistData;
+}
+
+function createPublisherData(uniqueTracks) {
+    const publishers = new Set();
+    let publisherIdCounter = 1;
+   
+    uniqueTracks.forEach((track) => {
+        if (track.contributors.publisher && track.contributors.publisher.trim()) {
+            const publisherList = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
+            publisherList.forEach(publisher => publishers.add(publisher));
         }
+    });
+    const publisherData = [];
+    publishers.forEach(publisher => {
+        const publisherId = `PUB${String(publisherIdCounter).padStart(3, '0')}`;
+        publisherData.push([
+            publisherId, // import_id
+            publisher, // name
+            '' // ipi_name_numbers
+        ]);
+        publisherIdCounter++;
+    });
+    return publisherData;
+}
 
-        function getUniqueTrackCount() {
-            if (!columnMapping || columnMapping.isrcCode === -1) return 0;
-            const dataRows = labelCopyData.slice(4);
-            const uniqueISRCs = new Set();
-            dataRows.forEach(row => {
-                const isrc = row[columnMapping.isrcCode];
-                if (isrc && isrc.trim()) {
-                    uniqueISRCs.add(isrc.trim());
-                }
-            });
-            return uniqueISRCs.size;
-        }
-
-        function createColumnMapping(headerRow) {
-            const mapping = {};
-            const columnDefinitions = {
-                'recordLabel': ['Record Label', 'Label'],
-                'productTitle': ['Product Title', 'Album Title', 'Album'],
-                'productPrimaryArtist': ['Product Primary Artist', 'Album Artist', 'Primary Artist'],
-                'barcode': ['Barcode/UPC', 'UPC', 'Barcode', 'EAN'],
-                'catalogueNumber': ['Catalogue Number', 'Catalog Number', 'Cat No'],
-                'format': ['Format'],
-                'productType': ['Product Type'],
-                'productPYear': ['Product (P) Year', 'P Year', 'P-Year', 'pline year'],
-                'productPHolder': ['Product (P) Holder', 'P Holder', 'P-Holder', 'pline owner'],
-                'productCYear': ['Product (C) Year', 'C Year', 'C-Year', 'cline year'],
-                'productCHolder': ['Product (C) Holder', 'C Holder', 'C-Holder', 'cline owner'],
-                'releaseDate': ['Release Date', 'Date'],
-                'productGenre': ['Product Genre', 'Genre', 'Primary Genre'],
-                'volumeNo': ['Volume No.', 'Volume', 'Disc No.', 'Disc Number'],
-                'sides': ['Sides (if vinyl)', 'Sides', 'Side'],
-                'trackNo': ['Track No.', 'Track Number', '#', 'Track Seq'],
-                'trackPrimaryArtist': ['Track Primary Artist', 'Artist', 'Track Artist', 'Primary Artist'],
-                'trackMainTitle': ['Track Main Title', 'Song Title', 'Track Title', 'Main Title', 'Title'],
-                'trackTitleVersion': ['Track Title Version', 'Version', 'Mix'],
-                'trackPYear': ['Track (P) Year', 'Track P Year'],
-                'trackPHolder': ['Track (P) Holder', 'Track P Holder'],
-                'trackCYear': ['Track (C) Year', 'Track C Year'],
-                'trackCHolder': ['Track (C) Holder', 'Track C Holder'],
-                'isrcCode': ['ISRC Code', 'ISRC', 'isrc code', 'Isrc Code', 'ISRC CODE', 'isrc_code'],
-                'trackDuration': ['Track Duration', 'Duration', 'Length', 'Time'],
-                'trackLanguage': ['Audio Language', 'Language', 'Track Language'],
-                'individualPerformer': ['Individual Performer', 'Performer', 'Musicians', 'Performers'],
-                'performerInstrumentRole': ['Performer Instrument Role', 'Instrument', 'Role', 'Instrument Role'],
-                'producer': ['Producer', 'Produced By'],
-                'recordingEngineer': ['Recording Engineer', 'Engineer', 'Recorded By'],
-                'mixer': ['Mixer', 'Mixed By'],
-                'mixEngineer': ['Mix Engineer', 'Mixing Engineer'],
-                'mixedAt': ['Mixed At', 'Mix Location', 'Mixed @'],
-                'recordedAt': ['Recorded At', 'Recording Location', 'Recorded @'],
-                'sampleInfo': ['Sample Info', 'Samples'],
-                'masteringEngineer': ['Mastering Engineer', 'Mastered By'],
-                'masteredAt': ['Mastered At', 'Mastering Location', 'Mastered @'],
-                'writer': ['Writer / Composer', 'Writer', 'Composer', 'Written By'],
-                'publisher': ['Publisher', 'Published By']
-            };
-            // Enhanced search with fuzzy matching
-            Object.keys(columnDefinitions).forEach(key => {
-                const searchTerms = columnDefinitions[key];
-                let foundIndex = -1;
-               
-                // Exact match first
-                for (const term of searchTerms) {
-                    foundIndex = headerRow.findIndex(header =>
-                        String(header).toLowerCase().trim() === term.toLowerCase()
-                    );
-                    if (foundIndex !== -1) break;
-                }
-               
-                // Fuzzy match if exact not found
-                if (foundIndex === -1) {
-                    for (const term of searchTerms) {
-                        foundIndex = headerRow.findIndex(header =>
-                            String(header).toLowerCase().includes(term.toLowerCase().split(' ')[0])
-                        );
-                        if (foundIndex !== -1) break;
-                    }
-                }
-               
-                mapping[key] = foundIndex;
-            });
-            return mapping;
-        }
-
-        function populateTemplateUniversal() {
-            // Create dynamic column mapping
-            const cols = createColumnMapping(labelCopyData[1]);
-            columnMapping = cols;
-           
-            console.log('Column mapping created:', cols);
-           
-            // Validate required columns
-            const requiredFields = ['isrcCode', 'trackMainTitle', 'trackPrimaryArtist'];
-            const missingFields = requiredFields.filter(field => cols[field] === -1);
-           
-            if (missingFields.length > 0) {
-                throw new Error(`Missing required columns: ${missingFields.join(', ')}. Please check your file format.`);
-            }
-           
-            // Extract data from label copy (assuming data starts at row 4)
-            const dataRows = labelCopyData.slice(4);
-           
-            // Create unique tracks map
-            const uniqueTracks = new Map();
-            const isrcToTrackId = new Map();
-            let trackIdCounter = 1;
-           
-            // Process unique tracks
-            dataRows.forEach((row, index) => {
-                const isrc = row[cols.isrcCode];
-                const title = row[cols.trackMainTitle];
-               
-                if (isrc && isrc.trim() && title && title.trim()) {
-                    if (!uniqueTracks.has(isrc)) {
-                        const trackId = `TRACK${String(trackIdCounter).padStart(3, '0')}`;
-                        uniqueTracks.set(isrc, createTrackObject(row, cols, trackId));
-                        isrcToTrackId.set(isrc, trackId);
-                        trackIdCounter++;
-                    }
-                }
-            });
-           
-            console.log(`Created ${uniqueTracks.size} unique tracks from ${dataRows.length} rows`);
-           
-            // Populate sheets based on template structure
-            populateSheetUniversal('Albums', createAlbumData(dataRows, cols));
-            populateSheetUniversal('Tracks', createTrackData(uniqueTracks));
-            populateSheetUniversal('Works', createWorkData(uniqueTracks));
-            populateSheetUniversal('Artists', createArtistData(dataRows, cols, uniqueTracks));
-           
-            // Handle new/old template differences
-            if (templateStructure.version === 'v2024_new') {
-                populateSheetUniversal('Publishers', createPublisherData(uniqueTracks));
-                populateSheetUniversal('MapPublisherToWork', createPublisherWorkMapping(uniqueTracks));
-                populateSheetUniversal('AlbumPrimaryContributions', createAlbumPrimaryContributions(dataRows, cols));
-            }
-           
-            // Universal mapping sheets
-            populateUniversalMappings(uniqueTracks, dataRows, cols);
-            populateUniversalContributions(uniqueTracks);
-        }
-
-        function createTrackObject(row, cols, trackId) {
-            return {
-                trackId: trackId,
-                title: row[cols.trackMainTitle] || '',
-                artist: row[cols.trackPrimaryArtist] || '',
-                isrc: row[cols.isrcCode] || '',
-                version: row[cols.trackTitleVersion] || '',
-                duration: row[cols.trackDuration] || '',
-                pYear: row[cols.trackPYear] || '',
-                pHolder: row[cols.trackPHolder] || '',
-                cYear: row[cols.trackCYear] || '',
-                cHolder: row[cols.trackCHolder] || '',
-                language: row[cols.trackLanguage] || 'English',
-                genre: row[cols.productGenre] || '',
-                label: row[cols.recordLabel] || '',
-                albumInfo: {
-                    title: row[cols.productTitle] || '',
-                    barcode: row[cols.barcode] || '',
-                    volume: row[cols.volumeNo] || 1,
-                    side: row[cols.sides] || '',
-                    trackNo: row[cols.trackNo] || ''
-                },
-                contributors: {
-                    performers: row[cols.individualPerformer] || '',
-                    roles: row[cols.performerInstrumentRole] || '',
-                    producer: row[cols.producer] || '',
-                    engineer: row[cols.recordingEngineer] || '',
-                    mixer: row[cols.mixer] || '',
-                    mixEngineer: row[cols.mixEngineer] || '',
-                    masteringEngineer: row[cols.masteringEngineer] || '',
-                    writer: row[cols.writer] || '',
-                    publisher: row[cols.publisher] || ''
-                }
-            };
-        }
-
-        /* REPLACE existing populateSheetUniversal(...) WITH THIS */
-        function populateSheetUniversal(sheetName, data) {
-            if (!templateStructure.sheets[sheetName] || !templateStructure.sheets[sheetName].exists) {
-                console.warn(`Sheet ${sheetName} not found in template`);
-                return;
-            }
-
-            const sheet = processedWorkbook.Sheets[sheetName];
-            // Read current sheet data (copied from original template earlier)
-            const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-            const structure = templateStructure.sheets[sheetName];
-            const startRow = structure.dataStartRow;
-
-            // Preserve everything up to startRow (this keeps all header rows + any instructional rows)
-            const preservedRows = sheetData.slice(0, startRow);
-
-            // Build new data rows ensuring each row is at least as wide as template headers
-            const templateHeaders = structure.headers || [];
-            const newRows = data.map(rowData => {
-                const row = Array.isArray(rowData) ? rowData.slice() : (Array.from(rowData) || []);
-                // expand to match header length (avoid truncating header columns)
-                while (row.length < templateHeaders.length) row.push('');
-                return row;
-            });
-
-            // Recombine: preserved header rows + new data rows
-            const finalSheetData = preservedRows.concat(newRows);
-
-            // Write back to the processed workbook sheet
-            processedWorkbook.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(finalSheetData);
-        }
-
-
-        // Helper: get the machine header row (row 1) or fall back to the display header
-        function getMachineHeaders(sheetName) {
-            const s = templateStructure.sheets[sheetName];
-            if (!s) return [];
-            // Prefer rawData[0] (machine keys) if available, otherwise use the found header row
-            return (s.rawData && s.rawData[0]) ? s.rawData[0].map(h => String(h || '').trim()) :
-                (s.headers || []).map(h => String(h || '').trim());
-        }
-
-        // Helper: generic mapper that tries exact machine-key mapping first, then token matches
-        function valueForHeaderKey(headerKey, valueMap) {
-            const key = String(headerKey || '').toLowerCase();
-            if (!key) return '';
-            const k = key.replace(/[^a-z0-9]/g, '');
-
-            // --- Core IDs & Titles ---
-            if (key.includes('project_import_id')) return ''; // never populate Project IDs
-            if (key.includes('import_id')) return valueMap.import_id || '';
-            if (key === 'title' || key === 'name') return valueMap.title || '';
-            if (key.includes('import_display_title')) return valueMap.import_display_title || '';
-            if (key.includes('version') && key.includes('display')) return valueMap.import_version_display_title || '';
-            if (key.includes('version')) return valueMap.version || '';
-
-            // --- Config / Label / Identifiers ---
-            if (key.includes('configuration') || key === 'format' || key === 'configuration_code') return valueMap.configuration || valueMap.configuration_code || '';
-            if (key.includes('label') && key.includes('import')) return valueMap.import_label || '';
-            if (key.includes('display_label') || key.includes('marketing label')) return valueMap.display_label || '';
-            if (key.includes('upc') || key.includes('ean')) return valueMap.upc || valueMap.upc_number || '';
-            if (key.includes('release_number') || key.includes('catalog')) return valueMap.catalog || valueMap.release_number || '';
-
-            // --- Flags ---
-            if (key.includes('promotional')) return valueMap.promotional || '';
-            if (key.includes('box_set')) return valueMap.box_set || '';
-            if (key.includes('indie_exclusive')) return valueMap.indie_exclusive || '';
-            if (key.includes('is_reissue')) return valueMap.is_reissue || '';
-
-            // --- Genres ---
-            if (key.includes('primary_genre') && !key.includes('sub')) return valueMap.primary_genre_code || valueMap.genre || '';
-            if (key.includes('primary_sub_genre') || key.includes('sub_genre')) return valueMap.primary_sub_genre_code || valueMap.subGenre || '';
-
-            // --- Dates ---
-            if (key.includes('original_release_date')) return valueMap.original_release_date || valueMap.release_date || '';
-            if (key === 'release_date') return valueMap.release_date || '';
-
-            // --- P-Line ---
-            if (k.includes('plineyear') || key.includes('p-year') || key.includes('p_year'))
-                return valueMap.pline_year || valueMap.pYear || '';
-
-            if (k.includes('plineowner') || k.includes('pholder') || k.includes('powner'))
-                return valueMap.pline_owner || valueMap.pHolder || valueMap.p_owner || '';
-
-            // --- C-Line ---
-            if (k.includes('clineyear') || key.includes('c-year') || key.includes('c_year'))
-                return valueMap.cline_year || valueMap.cYear || '';
-
-            if (k.includes('clineowner') || k.includes('cholder') || k.includes('cowner'))
-                return valueMap.cline_owner || valueMap.cHolder || valueMap.c_owner || '';
-
-            // --- Recording dates ---
-            if (k.includes('recordingenddateyear'))
-                return valueMap.pline_year || valueMap.pYear || '';   // 👈 NEW RULE
-
-            // --- Languages ---
-            if (key.includes('audio_language')) return valueMap.audio_language || 'English';
-            if (key.includes('metadata_language_country')) return valueMap.metadata_language_country || 'United Kingdom';
-            if (key.includes('metadata_language')) return valueMap.metadata_language || 'English';
-
-            // --- Tracks ---
-            if (key.includes('isrc')) return valueMap.isrc || '';
-            if (key.includes('track_type')) return valueMap.track_type || '';
-            if (key.includes('video_type')) return valueMap.video_type || '';
-            if (key.includes('parental_advisory')) return valueMap.parental_advisory || '';
-            if (key.includes('length')) return valueMap.length || '';
-
-            // --- Misc ---
-            if (key.includes('keywords')) return valueMap.keywords || '';
-            if (key.includes('notes')) return valueMap.notes || '';
-
-            // --- Fallbacks ---
-            if (key.includes('genre')) return valueMap.genre || '';
-            if (key.includes('label')) return valueMap.label || '';
-            if (key.includes('artist')) return valueMap.artist || '';
-            if (key.includes('work')) return valueMap.work || '';
-
-            return '';
-        }
-
-        /* ----------- Albums ----------- */
-        function createAlbumData(dataRows, cols) {
-            const albums = new Map();
-
-            dataRows.forEach(row => {
-                const title = row[cols.productTitle];
-                const barcode = row[cols.barcode];
-                if (title && title.toString().trim() && barcode && barcode.toString().trim()) {
-                    const albumKey = `${title}_${barcode}`;
-                    if (!albums.has(albumKey)) {
-                        albums.set(albumKey, {
-                            title: title,
-                            artist: row[cols.productPrimaryArtist] || '',
-                            upc: barcode,
-                            catalog: row[cols.catalogueNumber] || '',
-                            format: row[cols.format] || 'Digital Album',
-                            genre: row[cols.productGenre] || '',
-                            releaseDate: formatDate(row[cols.releaseDate]) || '',
-                            pYear: row[cols.productPYear] || '',
-                            pHolder: row[cols.productPHolder] || '',
-                            cYear: row[cols.productCYear] || '',
-                            cHolder: row[cols.productCHolder] || '',
-                            label: row[cols.recordLabel] || ''
-                        });
-                    }
-                }
-            });
-
-            const albumData = [];
-            let albumIdCounter = 1;
-
-            const machineHeaders = getMachineHeaders('Albums');
-
-            albums.forEach((album, key) => {
-                const albumId = `ALBUM${String(albumIdCounter).padStart(3, '0')}`;
-
-                // value map for token lookups
-                const v = {
-                    import_id: albumId,
-                    title: album.title,
-                    import_display_title: '',
-                    configuration: album.format,
-                    version: '',
-                    import_version_display_title: '',
-                    import_label: album.label,
-                    display_label: '',
-                    wmg_distribution_group_code: '',
-                    upc_number: album.upc,
-                    release_number: album.catalog,
-                    promotional: '',
-                    box_set: '',
-                    indie_exclusive: '',
-                    primary_genre_code: album.genre,
-                    primary_sub_genre_code: '',
-                    original_release_date: album.releaseDate,
-                    release_date: album.releaseDate,
-                    is_reissue: '',
-                    pline_year: album.pYear,
-                    pline_owner: album.pHolder || '',
-                    pHolder: album.pHolder || '',   // <-- add this
-                    cline_year: album.cYear,
-                    cline_owner: album.cHolder || '',
-                    cHolder: album.cHolder || '',   // <-- add this
-                    wmg_metadata_language_code: 'English',
-                    metadata_language_country_code: ''
-                };
-
-                // Build row by iterating template machine headers
-                const row = machineHeaders.map(h => valueForHeaderKey(h, v));
-                // If machineHeaders shorter than expected, ensure it's not empty cell length mismatch:
-                albumData.push(row);
-                albumIdCounter++;
-            });
-
-            return albumData;
-        }
-
-        /* ----------- Tracks ----------- */
-        function createTrackData(uniqueTracks) {
-            const trackData = [];
-            const machineHeaders = getMachineHeaders('Tracks');
-
-            uniqueTracks.forEach((track, isrc) => {
-                const duration = formatDuration(track.duration);
-
-                const v = {
-                    import_id: track.trackId,
-                    title: track.title,
-                    import_display_title: '',
-                    isrc: track.isrc,
-                    version: track.version,
-                    import_version_display_title: '',
-                    import_label: track.label,
-                    wmg_distribution_group_code: '',
-                    track_type: 'Audio',
-                    configuration: '', // leave blank if not sure
-                    video_type: '',
-                    parental_advisory: '',
-                    primary_genre_code: track.genre,
-                    primary_sub_genre_code: '',
-                    import_music_type: '',
-                    length: duration,
-                    pline_year: track.pYear,
-                    pline_owner: track.pHolder,
-                    pHolder: track.pHolder,        // <-- add this
-                    cline_year: track.cYear,
-                    cline_owner: track.cHolder,
-                    cHolder: track.cHolder,        // <-- add this
-                    audio_language: 'English',
-                    audio_language: 'English',                 // ✅ always default English
-                    metadata_language: 'English',              // ✅ metadata language
-                    metadata_language_country: 'United Kingdom'// ✅ country fix
-
-                };
-
-                const row = machineHeaders.map(h => valueForHeaderKey(h, v));
-                trackData.push(row);
-            });
-
-            return trackData;
-        }
-
-
-        function createWorkData(uniqueTracks) {
-            const workData = [];
-           
-            uniqueTracks.forEach((track, isrc) => {
-                const workId = track.trackId.replace('TRACK', 'WORK');
-               
-                const workRow = [
-                    workId, // import_id
-                    track.title, // title
-                    'Pop', // import_music_type
-                    '', // iswc
-                    '', // label_work_code
-                    '', // copyright_year
-                    'English', // wmg_language_code
-                    '', // agency
-                    '' // description
-                ];
-               
-                workData.push(workRow);
-            });
-           
-            return workData;
-        }
-
-        function createArtistData(dataRows, cols, uniqueTracks) {
-            const artists = new Set();
-           
-            // Add primary artists
-            dataRows.forEach(row => {
-                if (row[cols.productPrimaryArtist] && row[cols.productPrimaryArtist].trim()) {
-                    artists.add(row[cols.productPrimaryArtist].trim());
-                }
-                if (row[cols.trackPrimaryArtist] && row[cols.trackPrimaryArtist].trim()) {
-                    artists.add(row[cols.trackPrimaryArtist].trim());
-                }
-            });
-           
-            // Add contributors from unique tracks
-            uniqueTracks.forEach((track) => {
-                if (track.contributors.performers && track.contributors.performers.trim()) {
-                    const performerNames = track.contributors.performers.split('|').map(name => name.trim()).filter(name => name);
-                    performerNames.forEach(name => artists.add(name));
-                }
-               
-                // Add other contributors
-                Object.values(track.contributors).forEach(contributorString => {
-                    if (contributorString && contributorString.trim()) {
-                        const contributors = contributorString.split(/[,;]/).map(name => name.trim()).filter(name => name);
-                        contributors.forEach(name => artists.add(name));
-                    }
-                });
-            });
-            const artistData = [];
-            artists.forEach(artist => {
-                artistData.push([
-                    artist, // name
-                    '', // ipi_name_numbers
-                    '' // empty column
-                ]);
-            });
-            return artistData;
-        }
-
-        function createPublisherData(uniqueTracks) {
-            const publishers = new Set();
-            let publisherIdCounter = 1;
-           
-            uniqueTracks.forEach((track) => {
-                if (track.contributors.publisher && track.contributors.publisher.trim()) {
-                    const publisherList = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
-                    publisherList.forEach(publisher => publishers.add(publisher));
-                }
-            });
-            const publisherData = [];
+function createPublisherWorkMapping(uniqueTracks) {
+    const publisherMap = new Map();
+    let publisherIdCounter = 1;
+   
+    // Create publisher ID mapping
+    uniqueTracks.forEach((track) => {
+        if (track.contributors.publisher && track.contributors.publisher.trim()) {
+            const publishers = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
             publishers.forEach(publisher => {
-                const publisherId = `PUB${String(publisherIdCounter).padStart(3, '0')}`;
-                publisherData.push([
-                    publisherId, // import_id
-                    publisher, // name
-                    '' // ipi_name_numbers
-                ]);
-                publisherIdCounter++;
+                if (!publisherMap.has(publisher)) {
+                    publisherMap.set(publisher, `PUB${String(publisherIdCounter).padStart(3, '0')}`);
+                    publisherIdCounter++;
+                }
             });
-            return publisherData;
         }
-
-        function createPublisherWorkMapping(uniqueTracks) {
-            const publisherMap = new Map();
-            let publisherIdCounter = 1;
-           
-            // Create publisher ID mapping
-            uniqueTracks.forEach((track) => {
-                if (track.contributors.publisher && track.contributors.publisher.trim()) {
-                    const publishers = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
-                    publishers.forEach(publisher => {
-                        if (!publisherMap.has(publisher)) {
-                            publisherMap.set(publisher, `PUB${String(publisherIdCounter).padStart(3, '0')}`);
-                            publisherIdCounter++;
-                        }
-                    });
+    });
+    const mappingData = [];
+   
+    uniqueTracks.forEach((track, isrc) => {
+        const workId = track.trackId.replace('TRACK', 'WORK');
+       
+        if (track.contributors.publisher && track.contributors.publisher.trim()) {
+            const publishers = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
+   
+            publishers.forEach(publisher => {
+                const publisherId = publisherMap.get(publisher);
+                if (publisherId) {
+                    mappingData.push([
+                        publisherId, // PUBLISHER ID
+                        workId, // WORK ID
+                        '', // RIGHTS ADMINISTRATOR
+                        '', // AFFILIATION
+                        '', // SPLIT PERCENTAGE
+                        'worldwide', // TERRITORY
+                        '' // TERRITORY RESTRICTIONS
+                    ]);
                 }
             });
-            const mappingData = [];
-           
-            uniqueTracks.forEach((track, isrc) => {
-                const workId = track.trackId.replace('TRACK', 'WORK');
-               
-                if (track.contributors.publisher && track.contributors.publisher.trim()) {
-                    const publishers = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
-           
-                    publishers.forEach(publisher => {
-                        const publisherId = publisherMap.get(publisher);
-                        if (publisherId) {
-                            mappingData.push([
-                                publisherId, // PUBLISHER ID
-                                workId, // WORK ID
-                                '', // RIGHTS ADMINISTRATOR
-                                '', // AFFILIATION
-                                '', // SPLIT PERCENTAGE
-                                'worldwide', // TERRITORY
-                                '' // TERRITORY RESTRICTIONS
-                            ]);
-                        }
-                    });
-                }
-            });
-            return mappingData;
         }
+    });
+    return mappingData;
+}
 
-        function createAlbumPrimaryContributions(dataRows, cols) {
-            const albums = new Map();
-           
-            dataRows.forEach(row => {
-                const albumTitle = row[cols.productTitle];
-                const barcode = row[cols.barcode];
-                const primaryArtist = row[cols.productPrimaryArtist];
-               
-                if (albumTitle && albumTitle.trim() && barcode && barcode.trim() && primaryArtist && primaryArtist.trim()) {
-                    const albumKey = `${albumTitle}_${barcode}`;
-                    if (!albums.has(albumKey)) {
-                        albums.set(albumKey, {
-                            title: albumTitle,
-                            artist: primaryArtist,
-                            barcode: barcode
-                        });
-                    }
-                }
-            });
-            const contributionData = [];
-            let albumIdCounter = 1;
-           
-            albums.forEach((album, key) => {
-                const albumId = `ALBUM${String(albumIdCounter).padStart(3, '0')}`;
-                contributionData.push([
-                    albumId, // ALBUM ID
-                    album.artist, // ARTIST NAME
-                    '' // FEATURED (empty for primary artists)
-                ]);
-                albumIdCounter++;
-            });
-            return contributionData;
-        }
-
-        function populateUniversalMappings(uniqueTracks, dataRows, cols) {
-            // Create album mapping
-            const albumMap = new Map();
-            let albumIndex = 1;
-            dataRows.forEach(row => {
-                const albumTitle = row[cols.productTitle];
-                const barcode = row[cols.barcode];
-                const key = `${albumTitle}_${barcode}`;
-                if (albumTitle && barcode && !albumMap.has(key)) {
-                    albumMap.set(key, `ALBUM${String(albumIndex).padStart(3, '0')}`);
-                    albumIndex++;
-                }
-            });
-            // MapTrackToAlbum
-            const trackToAlbumData = [];
-            dataRows.forEach(row => {
-                const isrc = row[cols.isrcCode];
-                const albumTitle = row[cols.productTitle];
-                const barcode = row[cols.barcode];
-                const volumeNo = row[cols.volumeNo] || 1;
-                const trackNo = row[cols.trackNo];
-                if (isrc && uniqueTracks.has(isrc)) {
-                    const trackId = uniqueTracks.get(isrc).trackId;
-                    const albumId = albumMap.get(`${albumTitle}_${barcode}`);
-                    if (trackId && albumId) {
-                        trackToAlbumData.push([
-                            albumId, // Album ID
-                            trackId, // Track ID
-                            volumeNo, // Disc Number
-                            '', // Side (optional)
-                            trackNo // Track Number
-                        ]);
-                    }
-                }
-            });
-            // TrackPrimaryContributions
-            const trackPrimaryData = [];
-            uniqueTracks.forEach((track, isrc) => {
-                trackPrimaryData.push([
-                    track.trackId, // import_id
-                    track.artist, // import_artist_by_name
-                    '' // featured
-                ]);
-            });
-            // MapWorkToTrack
-            const workToTrackData = [];
-            uniqueTracks.forEach((track, isrc) => {
-                const workId = track.trackId.replace('TRACK', 'WORK');
-                workToTrackData.push([
-                    track.trackId, // track_import_id
-                    workId, // work_import_id
-                    '' // empty column
-                ]);
-            });
-            // Populate sheets if they exist
-            if (templateStructure.sheets['MapTrackToAlbum']) {
-                populateSheetUniversal('MapTrackToAlbum', trackToAlbumData);
-            }
-            if (templateStructure.sheets['TrackPrimaryContributions']) {
-                populateSheetUniversal('TrackPrimaryContributions', trackPrimaryData);
-            }
-            if (templateStructure.sheets['MapWorkToTrack']) {
-                populateSheetUniversal('MapWorkToTrack', workToTrackData);
-            }
-        }
-
-        function populateUniversalContributions(uniqueTracks) {
-            const openPlayRoleMapping = createOpenPlayRoleMapping();
-           
-            function getOpenPlayRole(contributorType) {
-                if (openPlayRoleMapping[contributorType]) {
-                    return openPlayRoleMapping[contributorType];
-                }
-               
-                const lowerType = contributorType.toLowerCase();
-                for (const [key, value] of Object.entries(openPlayRoleMapping)) {
-                    if (key.toLowerCase() === lowerType) {
-                        return value;
-                    }
-                }
-               
-                // Fallback logic
-                const typeWords = lowerType.split(/[\s,]+/);
-                const instrumentKeywords = ['guitar', 'bass', 'drum', 'keyboard', 'piano', 'vocal', 'singing', 'instrument', 'percussion', 'violin', 'saxophone', 'trumpet', 'flute'];
-                if (typeWords.some(word => instrumentKeywords.some(keyword => word.includes(keyword)))) {
-                    return { role: 'Instrument', type: contributorType };
-                }
-               
-                const productionKeywords = ['producer', 'production', 'recording', 'engineer', 'tracking'];
-                if (typeWords.some(word => productionKeywords.some(keyword => word.includes(keyword)))) {
-                    return { role: 'Production & Engineering', type: contributorType };
-                }
-               
-                return { role: 'Other', type: contributorType };
-            }
-           
-            function parseMultipleRoles(roleString) {
-                if (!roleString || !roleString.trim()) return [];
-                return roleString.split(',').map(role => role.trim()).filter(role => role.length > 0);
-            }
-           
-            const trackContribData = [];
-            const workContribData = [];
-           
-            uniqueTracks.forEach((track, isrc) => {
-                const workId = track.trackId.replace('TRACK', 'WORK');
-               
-                // Process pipe-delimited performers
-                if (track.contributors.performers && track.contributors.performers.trim()) {
-                    const performerNames = track.contributors.performers.split('|').map(name => name.trim()).filter(name => name);
-                    const performerRoles = track.contributors.roles ? track.contributors.roles.split('|').map(role => role.trim()).filter(role => role) : [];
-           
-                    performerNames.forEach((performer, index) => {
-                        const roleString = performerRoles[index] || performerRoles[0] || 'Performer';
-                        const individualRoles = parseMultipleRoles(roleString);
-               
-                        individualRoles.forEach(individualRole => {
-                            const openPlayMapping = getOpenPlayRole(individualRole);
-                            trackContribData.push([
-                                track.trackId,
-                                performer,
-                                openPlayMapping.role,
-                                openPlayMapping.type
-                            ]);
-                        });
-                    });
-                }
-               
-                // Add other contributors
-                const contributorTypes = [
-                    { name: track.contributors.producer, originalType: 'Producer' },
-                    { name: track.contributors.engineer, originalType: 'Recording Engineer' },
-                    { name: track.contributors.mixer, originalType: 'Mixer' },
-                    { name: track.contributors.mixEngineer, originalType: 'Mix Engineer' },
-                    { name: track.contributors.masteringEngineer, originalType: 'Mastering Engineer' }
-                ];
-               
-                contributorTypes.forEach(contributor => {
-                    if (contributor.name && contributor.name.trim()) {
-                        const names = contributor.name.split(/[,;]/).map(name => name.trim()).filter(name => name);
-               
-                        names.forEach(name => {
-                            const openPlayMapping = getOpenPlayRole(contributor.originalType);
-                            trackContribData.push([
-                                track.trackId,
-                                name,
-                                openPlayMapping.role,
-                                openPlayMapping.type
-                            ]);
-                        });
-                    }
+function createAlbumPrimaryContributions(dataRows, cols) {
+    const albums = new Map();
+   
+    dataRows.forEach(row => {
+        const albumTitle = row[cols.productTitle];
+        const barcode = row[cols.barcode];
+        const primaryArtist = row[cols.productPrimaryArtist];
+       
+        if (albumTitle && albumTitle.trim() && barcode && barcode.trim() && primaryArtist && primaryArtist.trim()) {
+            const albumKey = `${albumTitle}_${barcode}`;
+            if (!albums.has(albumKey)) {
+                albums.set(albumKey, {
+                    title: albumTitle,
+                    artist: primaryArtist,
+                    barcode: barcode
                 });
-               
-                // Work contributors (writers)
-                if (track.contributors.writer && track.contributors.writer.trim()) {
-                    const writers = track.contributors.writer.split(/[,;]/).map(w => w.trim()).filter(w => w);
-           
-                    writers.forEach(writer => {
-                        workContribData.push([
-                            workId, // work_id
-                            writer, // artist_name
-                            'Composition & Lyrics', // role
-                            'Composer', // type
-                            '', // affiliation
-                            '', // split_percentage
-                            '', // territory
-                            '' // territory_restrictions
-                        ]);
-                    });
-                }
+            }
+        }
+    });
+    const contributionData = [];
+    let albumIdCounter = 1;
+   
+    albums.forEach((album, key) => {
+        const albumId = `ALBUM${String(albumIdCounter).padStart(3, '0')}`;
+        contributionData.push([
+            albumId, // ALBUM ID
+            album.artist, // ARTIST NAME
+            '' // FEATURED (empty for primary artists)
+        ]);
+        albumIdCounter++;
+    });
+    return contributionData;
+}
+
+function populateUniversalMappings(uniqueTracks, dataRows, cols) {
+    // Create album mapping
+    const albumMap = new Map();
+    let albumIndex = 1;
+    dataRows.forEach(row => {
+        const albumTitle = row[cols.productTitle];
+        const barcode = row[cols.barcode];
+        const key = `${albumTitle}_${barcode}`;
+        if (albumTitle && barcode && !albumMap.has(key)) {
+            albumMap.set(key, `ALBUM${String(albumIndex).padStart(3, '0')}`);
+            albumIndex++;
+        }
+    });
+    
+    // MapTrackToAlbum
+    const trackToAlbumData = [];
+    dataRows.forEach(row => {
+        const isrc = row[cols.isrcCode];
+        const albumTitle = row[cols.productTitle];
+        const barcode = row[cols.barcode];
+        const volumeNo = row[cols.volumeNo] || 1;
+        const trackNo = row[cols.trackNo];
+        if (isrc && uniqueTracks.has(isrc)) {
+            const trackId = uniqueTracks.get(isrc).trackId;
+            const albumId = albumMap.get(`${albumTitle}_${barcode}`);
+            if (trackId && albumId) {
+                trackToAlbumData.push([
+                    albumId, // Album ID
+                    trackId, // Track ID
+                    volumeNo, // Disc Number
+                    '', // Side (optional)
+                    trackNo // Track Number
+                ]);
+            }
+        }
+    });
+    
+    // TrackPrimaryContributions
+    const trackPrimaryData = [];
+    uniqueTracks.forEach((track, isrc) => {
+        trackPrimaryData.push([
+            track.trackId, // import_id
+            track.artist, // import_artist_by_name
+            '' // featured
+        ]);
+    });
+    
+    // MapWorkToTrack
+    const workToTrackData = [];
+    uniqueTracks.forEach((track, isrc) => {
+        const workId = track.trackId.replace('TRACK', 'WORK');
+        workToTrackData.push([
+            track.trackId, // track_import_id
+            workId, // work_import_id
+            '' // empty column
+        ]);
+    });
+    
+    // Populate sheets if they exist
+    if (templateStructure.sheets['MapTrackToAlbum']) {
+        populateSheetUniversal('MapTrackToAlbum', trackToAlbumData);
+    }
+    if (templateStructure.sheets['TrackPrimaryContributions']) {
+        populateSheetUniversal('TrackPrimaryContributions', trackPrimaryData);
+    }
+    if (templateStructure.sheets['MapWorkToTrack']) {
+        populateSheetUniversal('MapWorkToTrack', workToTrackData);
+    }
+}
+
+function populateUniversalContributions(uniqueTracks) {
+    const openPlayRoleMapping = createOpenPlayRoleMapping();
+   
+    function getOpenPlayRole(contributorType) {
+        if (openPlayRoleMapping[contributorType]) {
+            return openPlayRoleMapping[contributorType];
+        }
+       
+        const lowerType = contributorType.toLowerCase();
+        for (const [key, value] of Object.entries(openPlayRoleMapping)) {
+            if (key.toLowerCase() === lowerType) {
+                return value;
+            }
+        }
+       
+        // Fallback logic
+        const typeWords = lowerType.split(/[\s,]+/);
+        const instrumentKeywords = ['guitar', 'bass', 'drum', 'keyboard', 'piano', 'vocal', 'singing', 'instrument', 'percussion', 'violin', 'saxophone', 'trumpet', 'flute'];
+        if (typeWords.some(word => instrumentKeywords.some(keyword => word.includes(keyword)))) {
+            return { role: 'Instrument', type: contributorType };
+        }
+       
+        const productionKeywords = ['producer', 'production', 'recording', 'engineer', 'tracking'];
+        if (typeWords.some(word => productionKeywords.some(keyword => word.includes(keyword)))) {
+            return { role: 'Production & Engineering', type: contributorType };
+        }
+       
+        return { role: 'Other', type: contributorType };
+    }
+   
+    function parseMultipleRoles(roleString) {
+        if (!roleString || !roleString.trim()) return [];
+        return roleString.split(',').map(role => role.trim()).filter(role => role.length > 0);
+    }
+   
+    const trackContribData = [];
+    const workContribData = [];
+   
+    uniqueTracks.forEach((track, isrc) => {
+        const workId = track.trackId.replace('TRACK', 'WORK');
+       
+        // Process pipe-delimited performers
+        if (track.contributors.performers && track.contributors.performers.trim()) {
+            const performerNames = track.contributors.performers.split('|').map(name => name.trim()).filter(name => name);
+            const performerRoles = track.contributors.roles ? track.contributors.roles.split('|').map(role => role.trim()).filter(role => role) : [];
+   
+            performerNames.forEach((performer, index) => {
+                const roleString = performerRoles[index] || performerRoles[0] || 'Performer';
+                const individualRoles = parseMultipleRoles(roleString);
+       
+                individualRoles.forEach(individualRole => {
+                    const openPlayMapping = getOpenPlayRole(individualRole);
+                    trackContribData.push([
+                        track.trackId,
+                        performer,
+                        openPlayMapping.role,
+                        openPlayMapping.type
+                    ]);
+                });
             });
-           
-            // Populate contribution sheets if they exist
-            if (templateStructure.sheets['TrackContributions']) {
-                populateSheetUniversal('TrackContributions', trackContribData);
-            }
-            if (templateStructure.sheets['WorkContributions']) {
-                populateSheetUniversal('WorkContributions', workContribData);
-            }
         }
+       
+        // Add other contributors
+        const contributorTypes = [
+            { name: track.contributors.producer, originalType: 'Producer' },
+            { name: track.contributors.engineer, originalType: 'Recording Engineer' },
+            { name: track.contributors.mixer, originalType: 'Mixer' },
+            { name: track.contributors.mixEngineer, originalType: 'Mix Engineer' },
+            { name: track.contributors.masteringEngineer, originalType: 'Mastering Engineer' }
+        ];
+       
+        contributorTypes.forEach(contributor => {
+            if (contributor.name && contributor.name.trim()) {
+                const names = contributor.name.split(/[,;]/).map(name => name.trim()).filter(name => name);
+       
+                names.forEach(name => {
+                    const openPlayMapping = getOpenPlayRole(contributor.originalType);
+                    trackContribData.push([
+                        track.trackId,
+                        name,
+                        openPlayMapping.role,
+                        openPlayMapping.type
+                    ]);
+                });
+            }
+        });
+       
+        // Work contributors (writers)
+        if (track.contributors.writer && track.contributors.writer.trim()) {
+            const writers = track.contributors.writer.split(/[,;]/).map(w => w.trim()).filter(w => w);
+   
+            writers.forEach(writer => {
+                workContribData.push([
+                    workId, // work_id
+                    writer, // artist_name
+                    'Composition & Lyrics', // role
+                    'Composer', // type
+                    '', // affiliation
+                    '', // split_percentage
+                    '', // territory
+                    '' // territory_restrictions
+                ]);
+            });
+        }
+    });
+   
+    // Populate contribution sheets if they exist
+    if (templateStructure.sheets['TrackContributions']) {
+        populateSheetUniversal('TrackContributions', trackContribData);
+    }
+    if (templateStructure.sheets['WorkContributions']) {
+        populateSheetUniversal('WorkContributions', workContribData);
+    }
+}
 
-        function createOpenPlayRoleMapping() {
-            return {
-                // Production & Engineering
-                'Assistant Mastering Engineer': { role: 'Production & Engineering', type: 'Assistant Mastering Engineer' },
-                'Assistant Mixing Engineer': { role: 'Production & Engineering', type: 'Assistant Mixing Engineer' },
-                'Assistant Producer': { role: 'Production & Engineering', type: 'Assistant Producer' },
-                'Assistant Recording Engineer': { role: 'Production & Engineering', type: 'Assistant Recording Engineer' },
-                'Camera Operator': { role: 'Production & Engineering', type: 'Camera Operator' },
-                'Co-Producer': { role: 'Production & Engineering', type: 'Co-Producer' },
-                'Creative Director': { role: 'Production & Engineering', type: 'Creative Director' },
-                'Engineer': { role: 'Production & Engineering', type: 'Engineer' },
-                'Executive Producer': { role: 'Production & Engineering', type: 'Executive Producer' },
-                'Mastering Engineer': { role: 'Production & Engineering', type: 'Mastering Engineer' },
-                'Mixing Engineer': { role: 'Production & Engineering', type: 'Mixing Engineer' },
-                'Producer': { role: 'Production & Engineering', type: 'Producer' },
-                'Recording Engineer': { role: 'Production & Engineering', type: 'Recording Engineer' },
-                'Set Designer': { role: 'Production & Engineering', type: 'Set Designer' },
-                'Special Effects': { role: 'Production & Engineering', type: 'Special Effects' },
-                'Studio Personnel': { role: 'Production & Engineering', type: 'Studio Personnel' },
-                'Tonmeister': { role: 'Production & Engineering', type: 'Tonmeister' },
-                'Video Director': { role: 'Production & Engineering', type: 'Video Director' },
-                'Video Producer': { role: 'Production & Engineering', type: 'Video Producer' },
-                'Vocal Producer': { role: 'Production & Engineering', type: 'Vocal Producer' },
-               
-                // Instruments - Vocals
-                'Vocals': { role: 'Instrument', type: 'Vocals' },
-                'Lead Vocals': { role: 'Instrument', type: 'Lead Vocals' },
-                'Backing Vocals': { role: 'Instrument', type: 'Backing Vocals' },
-                'Background Vocals': { role: 'Instrument', type: 'Backing Vocals' },
-                'Singer': { role: 'Instrument', type: 'Vocals' },
-               
-                // Instruments - Strings
-                'Guitar': { role: 'Instrument', type: 'Guitar' },
-                'Lead Guitar': { role: 'Instrument', type: 'Lead Guitar' },
-                'Rhythm Guitar': { role: 'Instrument', type: 'Rhythm Guitar' },
-                'Electric Guitar': { role: 'Instrument', type: 'Electric Guitar' },
-                'Acoustic Guitar': { role: 'Instrument', type: 'Acoustic Guitar' },
-                'Bass': { role: 'Instrument', type: 'Bass' },
-                'Bass Guitar': { role: 'Instrument', type: 'Bass Guitar' },
-                'Electric Bass': { role: 'Instrument', type: 'Electric Bass' },
-                'Violin': { role: 'Instrument', type: 'Violin' },
-                'Viola': { role: 'Instrument', type: 'Viola' },
-                'Cello': { role: 'Instrument', type: 'Cello' },
-               
-                // Instruments - Keys & Wind
-                'Piano': { role: 'Instrument', type: 'Piano' },
-                'Keyboards': { role: 'Instrument', type: 'Keyboards' },
-                'Synthesizer': { role: 'Instrument', type: 'Synthesizer' },
-                'Synth': { role: 'Instrument', type: 'Synthesizer' },
-                'Organ': { role: 'Instrument', type: 'Organ' },
-                'Saxophone': { role: 'Instrument', type: 'Saxophone' },
-                'Trumpet': { role: 'Instrument', type: 'Trumpet' },
-                'Flute': { role: 'Instrument', type: 'Flute' },
-               
-                // Instruments - Rhythm
-                'Drums': { role: 'Instrument', type: 'Drums' },
-                'Drum Kit': { role: 'Instrument', type: 'Drums' },
-                'Percussion': { role: 'Instrument', type: 'Percussion' },
-               
-                // Performance
-                'Performer': { role: 'Instrument', type: 'Performer' },
-                'Musician': { role: 'Instrument', type: 'Performer' },
-               
-                // Other Category
-                'Mixer': { role: 'Other', type: 'Mixer' },
-                'Production Assistant': { role: 'Other', type: 'Production Assistant' },
-                'Programmer': { role: 'Other', type: 'Programmer' },
-                'Vocal Engineer': { role: 'Other', type: 'Vocal Engineer' },
-                'Assistant Sound Engineer': { role: 'Other', type: 'Assistant Sound Engineer' }
-            };
-        }
+function createOpenPlayRoleMapping() {
+    return {
+        'Assistant Mastering Engineer': { role: 'Production & Engineering', type: 'Assistant Mastering Engineer' },
+        'Assistant Mixing Engineer': { role: 'Production & Engineering', type: 'Assistant Mixing Engineer' },
+        'Assistant Producer': { role: 'Production & Engineering', type: 'Assistant Producer' },
+        'Assistant Recording Engineer': { role: 'Production & Engineering', type: 'Assistant Recording Engineer' },
+        'Camera Operator': { role: 'Production & Engineering', type: 'Camera Operator' },
+        'Co-Producer': { role: 'Production & Engineering', type: 'Co-Producer' },
+        'Creative Director': { role: 'Production & Engineering', type: 'Creative Director' },
+        'Engineer': { role: 'Production & Engineering', type: 'Engineer' },
+        'Executive Producer': { role: 'Production & Engineering', type: 'Executive Producer' },
+        'Mastering Engineer': { role: 'Production & Engineering', type: 'Mastering Engineer' },
+        'Mixing Engineer': { role: 'Production & Engineering', type: 'Mixing Engineer' },
+        'Producer': { role: 'Production & Engineering', type: 'Producer' },
+        'Recording Engineer': { role: 'Production & Engineering', type: 'Recording Engineer' },
+        'Set Designer': { role: 'Production & Engineering', type: 'Set Designer' },
+        'Special Effects': { role: 'Production & Engineering', type: 'Special Effects' },
+        'Studio Personnel': { role: 'Production & Engineering', type: 'Studio Personnel' },
+        'Tonmeister': { role: 'Production & Engineering', type: 'Tonmeister' },
+        'Video Director': { role: 'Production & Engineering', type: 'Video Director' },
+        'Video Producer': { role: 'Production & Engineering', type: 'Video Producer' },
+        'Vocal Producer': { role: 'Production & Engineering', type: 'Vocal Producer' },
+       
+        // Instruments - Vocals
+        'Vocals': { role: 'Instrument', type: 'Vocals' },
+        'Lead Vocals': { role: 'Instrument', type: 'Lead Vocals' },
+        'Backing Vocals': { role: 'Instrument', type: 'Backing Vocals' },
+        'Background Vocals': { role: 'Instrument', type: 'Backing Vocals' },
+        'Singer': { role: 'Instrument', type: 'Vocals' },
+       
+        // Instruments - Strings
+        'Guitar': { role: 'Instrument', type: 'Guitar' },
+        'Lead Guitar': { role: 'Instrument', type: 'Lead Guitar' },
+        'Rhythm Guitar': { role: 'Instrument', type: 'Rhythm Guitar' },
+        'Electric Guitar': { role: 'Instrument', type: 'Electric Guitar' },
+        'Acoustic Guitar': { role: 'Instrument', type: 'Acoustic Guitar' },
+        'Bass': { role: 'Instrument', type: 'Bass' },
+        'Bass Guitar': { role: 'Instrument', type: 'Bass Guitar' },
+        'Electric Bass': { role: 'Instrument', type: 'Electric Bass' },
+        'Violin': { role: 'Instrument', type: 'Violin' },
+        'Viola': { role: 'Instrument', type: 'Viola' },
+        'Cello': { role: 'Instrument', type: 'Cello' },
+       
+        // Instruments - Keys & Wind
+        'Piano': { role: 'Instrument', type: 'Piano' },
+        'Keyboards': { role: 'Instrument', type: 'Keyboards' },
+        'Synthesizer': { role: 'Instrument', type: 'Synthesizer' },
+        'Synth': { role: 'Instrument', type: 'Synthesizer' },
+        'Organ': { role: 'Instrument', type: 'Organ' },
+        'Saxophone': { role: 'Instrument', type: 'Saxophone' },
+        'Trumpet': { role: 'Instrument', type: 'Trumpet' },
+        'Flute': { role: 'Instrument', type: 'Flute' },
+       
+        // Instruments - Rhythm
+        'Drums': { role: 'Instrument', type: 'Drums' },
+        'Drum Kit': { role: 'Instrument', type: 'Drums' },
+        'Percussion': { role: 'Instrument', type: 'Percussion' },
+       
+        // Performance
+        'Performer': { role: 'Instrument', type: 'Performer' },
+        'Musician': { role: 'Instrument', type: 'Performer' },
+       
+        // Other Category
+        'Mixer': { role: 'Other', type: 'Mixer' },
+        'Production Assistant': { role: 'Other', type: 'Production Assistant' },
+        'Programmer': { role: 'Other', type: 'Programmer' },
+        'Vocal Engineer': { role: 'Other', type: 'Vocal Engineer' },
+        'Assistant Sound Engineer': { role: 'Other', type: 'Assistant Sound Engineer' }
+    };
+}
 
-        function formatDate(dateValue) {
-            if (!dateValue) return "";
-           
-            if (typeof dateValue === 'number') {
-                const date = new Date((dateValue - 25569) * 86400 * 1000);
-                return date.toISOString().split('T')[0];
-            }
-           
-            if (typeof dateValue === 'string') {
-                const date = new Date(dateValue);
-                if (!isNaN(date.getTime())) {
-                    return date.toISOString().split('T')[0];
-                }
-            }
-           
-            return dateValue;
+function formatDate(dateValue) {
+    if (!dateValue) return "";
+   
+    if (typeof dateValue === 'number') {
+        const date = new Date((dateValue - 25569) * 86400 * 1000);
+        return date.toISOString().split('T')[0];
+    }
+   
+    if (typeof dateValue === 'string') {
+        const date = new Date(dateValue);
+        if (!isNaN(date.getTime())) {
+            return date.toISOString().split('T')[0];
         }
+    }
+   
+    return dateValue;
+}
 
-        function formatDuration(durationValue) {
-            if (!durationValue) return "00:00:00";
-            if (typeof durationValue === 'number') {
-                const totalSeconds = Math.round(durationValue * 86400);
-                const hours = Math.floor(totalSeconds / 3600);
-                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                const seconds = totalSeconds % 60;
-                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            }
-            if (typeof durationValue === 'string') {
-                const parts = durationValue.split(':').map(p => parseInt(p.trim(), 10));
-                if (parts.length === 2) {
-                    return `00:${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`;
-                } else if (parts.length === 3) {
-                    return parts.map(p => String(p).padStart(2, '0')).join(':');
-                }
-            }
-            return "00:00:00";
+function formatDuration(durationValue) {
+    if (!durationValue) return "00:00:00";
+    if (typeof durationValue === 'number') {
+        const totalSeconds = Math.round(durationValue * 86400);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+    if (typeof durationValue === 'string') {
+        const parts = durationValue.split(':').map(p => parseInt(p.trim(), 10));
+        if (parts.length === 2) {
+            return `00:${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`;
+        } else if (parts.length === 3) {
+            return parts.map(p => String(p).padStart(2, '0')).join(':');
         }
+    }
+    return "00:00:00";
+}
 
-        function downloadResult() {
-            if (!processedWorkbook) return;
-           
-            try {
-                const wbout = XLSX.write(processedWorkbook, { bookType: 'xlsx', type: 'binary' });
-               
-                function s2ab(s) {
-                    const buf = new ArrayBuffer(s.length);
-                    const view = new Uint8Array(buf);
-                    for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-                    return buf;
-                }
-               
-                const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
-                const url = URL.createObjectURL(blob);
-               
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `OpenPlay_Import_Template_Universal_${new Date().toISOString().split('T')[0]}.xlsx`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-               
-            } catch (error) {
-                alert('Error downloading file: ' + error.message);
-                console.error('Download error:', error);
-            }
+function downloadResult() {
+    if (!processedWorkbook) return;
+   
+    try {
+        const wbout = XLSX.write(processedWorkbook, { bookType: 'xlsx', type: 'binary' });
+       
+        function s2ab(s) {
+            const buf = new ArrayBuffer(s.length);
+            const view = new Uint8Array(buf);
+            for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+            return buf;
         }
-    </script>
+       
+        const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+       
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `OpenPlay_Import_Populated_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+       
+    } catch (error) {
+        alert('Error downloading file: ' + error.message);
+        console.error('Download error:', error);
+    }
+}
+
+
+
+// Card-specific drop zones
+(function(){
+  function setupDropZone(id, handlerFn, inputId, metaId) {
+    const zone = document.getElementById(id);
+    if (!zone) return;
+    ['dragenter','dragover'].forEach(evt => {
+      zone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); zone.classList.add('dragover'); }, false);
+    });
+    ['dragleave','drop','dragend'].forEach(evt => {
+      zone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); zone.classList.remove('dragover'); }, false);
+    });
+    zone.addEventListener('drop', e => {
+      const file = (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) || null;
+      if (!file) return;
+      const meta = document.getElementById(metaId);
+      if (meta) meta.textContent = file.name;
+      try {
+        handlerFn({ target: { files: [file] } });
+      } catch (err) {
+        // fallback: try setting input.files using DataTransfer
+        try {
+          const input = document.getElementById(inputId);
+          if (input) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        } catch (e) { console.warn('Drop fallback failed', e); }
+      }
+    }, false);
+
+    // Also make clicking on the zone trigger click of input (label does this already)
+    zone.addEventListener('click', e => {
+      const input = document.getElementById(inputId);
+      if (input) input.click();
+    }, false);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    setupDropZone('dropZoneLabel', handleLabelCopyUpload, 'labelCopyInputBtn', 'labelCopyMeta');
+    setupDropZone('dropZoneTemplate', handleTemplateUpload, 'templateInputBtn', 'templateMeta');
+  });
+})();
+</script>
+</body>
+</html>
