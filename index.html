@@ -4,10 +4,13 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>OpenPlay Import â€" Redesigned</title>
+<title>OpenPlay AutoMap Tool</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://i.ibb.co/TBDZb29R/crlfavicon.png" rel="icon" type="image/png"/>
+<style>
 <style>
   <style>
     body, html {
@@ -352,7 +355,31 @@ header.topbar img { display: none; }
 }
 
 html {
-  zoom: 0.9; /* works in Chrome, Edge, Safari */
+  zoom: 0.85; /* works in Chrome, Edge, Safari */
+}
+
+.status.success i.fa-solid,
+.status.success i.fa-regular,
+.status.success i.fa-brands {
+  color: #22c55e;
+}
+
+.status.success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #22c55e;
+  color: #1e3a8a; /* Darker blue for better readability */
+  font-size: 14px;
+}
+
+.status.success i.fa-solid {
+  font-size: 20px;
+  color: #22c55e;
+  flex-shrink: 0;
 }
 
 @supports not (zoom: 0.9) {
@@ -361,9 +388,6 @@ html {
     transform-origin: top center;
   }
 }
-
-
-
 </style>
 </head>
 <body>
@@ -390,8 +414,8 @@ html {
 <header class="topbar">
 <div class="brand">
 <div>
-<h1>OpenPlay Import Converter</h1>
-<p>Automatically map Label Copy → OpenPlay templates • Universal, robust</p>
+<h1>OpenPlay AutoMap Tool</h1>
+<p>Automatically map and convert Label Copy → OpenPlay template • Universal, robust</p>
 </div>
 </div>
 <div class="top-actions">
@@ -454,7 +478,7 @@ html {
 <div class="process-area">
 <div style="display:flex;gap:12px;align-items:center;">
 <button class="process-button" disabled="" id="processButtonNew">Process files</button>
-<div id="processNote" style="font-size:13px;color:#52719a">Ready when both files present</div>
+<div id="processNote" style="font-size:13px;color:#52719a">Ready when both files are present</div>
 </div>
 <div aria-hidden="true" class="progress-wrap" style="margin-top:10px"><div class="progress" id="progressBar"></div></div>
 <div id="processStatusNew"></div>
@@ -492,6 +516,8 @@ html {
   });
   </script>
   <script>
+
+  
     // Add spin animation
     const style = document.createElement('style'); 
     style.innerHTML='@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}'; 
@@ -530,7 +556,7 @@ function handleLabelCopyUpload(event) {
             labelCopyData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
            
             document.getElementById('labelCopyStatusNew').innerHTML =
-                `<div class="status success">✅ Label Copy loaded successfully! Found ${labelCopyData.length} rows of data.</div>`;
+                `<div class="status success"><i class="fa-solid fa-circle-check"></i>Label Copy loaded successfully! Found ${labelCopyData.length} rows of data.</div>`;
            
             showLabelCopyPreview();
             checkReadyToProcess();
@@ -559,7 +585,7 @@ function handleTemplateUpload(event) {
             templateStructure = analyzeTemplateStructure(templateWorkbook);
            
             document.getElementById('templateStatusNew').innerHTML =
-                `<div class="status success">✅ OpenPlay template loaded successfully! Found ${templateWorkbook.SheetNames.length} sheets.</div>`;
+                `<div class="status success"><i class="fa-solid fa-circle-check"></i></i>       OpenPlay template loaded successfully! Found ${templateWorkbook.SheetNames.length} sheets.</div>`;
            
             checkReadyToProcess();
         } catch (error) {
@@ -715,7 +741,7 @@ function processFiles() {
         setTimeout(() => {
             progressBar.style.width = '100%';
             document.getElementById('processStatusNew').innerHTML =
-                `<div class="status success">✅ Processing completed successfully! Template populated with ${getUniqueTrackCount()} unique tracks.</div>`;
+                `<div class="status success"><i class="fa-solid fa-circle-check"></i> Processing completed successfully! Template populated with ${getUniqueTrackCount()} unique tracks.</div>`;
            
             // Show download options
             showDownloadOptions();
