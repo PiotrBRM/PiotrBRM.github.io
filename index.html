@@ -45,8 +45,8 @@
 
     /* Pulse animation (continuous scaling) */
     @keyframes pulse {
-      from { transform: scale(1); }
-      to   { transform: scale(1.4) translateY(-30px); }
+      from { transform: scale(0.8); }
+      to   { transform: scale(1.1) translateY(-30px); }
 	      animation: logoEntrance 1s ease-out forwards;
 
     }
@@ -420,7 +420,7 @@ html {
 </div>
 <div class="top-actions">
 <div class="pulse-ring" title="Live"></div>
-<div style="color:rgba(255,255,255,.95);font-weight:50">v0.97</div>
+<div style="color:rgba(255,255,255,.95);font-weight:50">v0.9.8</div>
 </div>
 </header>
 <section class="grid">
@@ -1262,7 +1262,7 @@ function createPublisherData(uniqueTracks) {
    
     uniqueTracks.forEach((track) => {
         if (track.contributors.publisher && track.contributors.publisher.trim()) {
-            const publisherList = track.contributors.publisher.split(/[,;]/).map(pub => pub.trim()).filter(pub => pub);
+            const publisherList = track.contributors.publisher.split(/[|/;,]/).map(pub => pub.trim()).filter(pub => pub);
             publisherList.forEach(publisher => publishers.add(publisher));
         }
     });
@@ -1363,37 +1363,131 @@ function populateUniversalMappings(uniqueTracks, dataRows, cols) {
     dataRows.forEach(row => {
         const albumTitle = row[cols.productTitle];
         const barcode = row[cols.barcode];
-        const key = `${albumTitle}_${barcode}`;
-        if (albumTitle && barcode && !albumMap.has(key)) {
-            albumMap.set(key, `ALBUM${String(albumIndex).padStart(3, '0')}`);
-            albumIndex++;
+        if (albumTitle && String(albumTitle).trim() && barcode && String(barcode).trim()) {
+            const key = `${albumTitle}_${barcode}`;
+            if (!albumMap.has(key)) {
+                albumMap.set(key, `ALBUM${String(albumIndex).padStart(3, '0')}`);
+                albumIndex++;
+            }
         }
     });
-    
-    // MapTrackToAlbum
+
+    // Helper: find a header index inside the uploaded label copy (robust match)
+    function findLabelCopyHeaderIndex(patterns) {
+        // header row used elsewhere in your code is labelCopyData[1]
+        const headerRow = (labelCopyData && labelCopyData[1]) ? labelCopyData[1] : [];
+        const lowered = headerRow.map(h => String(h || '').toLowerCase());
+        for (let i = 0; i < lowered.length; i++) {
+            for (const p of patterns) {
+                if (lowered[i].includes(p)) return i;
+            }
+        }
+        return -1;
+    }
+
+    // Look specifically for variations of "track number" or "#"
+    const trackNumberHeaderIndex = findLabelCopyHeaderIndex([
+        'track number', 'track no', 'tracknumber', 'trackno', 'track number on', 'track #', '#', 'track_number'
+    ]);
+
+    // Get machine headers for MapTrackToAlbum (if present)
+    const machineHeaders = (templateStructure && templateStructure.sheets && templateStructure.sheets['MapTrackToAlbum'])
+        ? getMachineHeaders('MapTrackToAlbum')
+        : [];
+
+    const useMachineHeaders = Array.isArray(machineHeaders) && machineHeaders.length > 0;
+
     const trackToAlbumData = [];
+
     dataRows.forEach(row => {
         const isrc = row[cols.isrcCode];
         const albumTitle = row[cols.productTitle];
         const barcode = row[cols.barcode];
         const volumeNo = row[cols.volumeNo] || 1;
-        const trackNo = row[cols.trackNo];
+
+        // Pull track number from label-copy header pos (robust), then fallback to cols.trackNo
+        let trackNo = '';
+        if (trackNumberHeaderIndex !== -1) {
+            trackNo = row[trackNumberHeaderIndex];
+            // check to the right (new templates sometimes shift one column)
+            if ((!trackNo || String(trackNo).trim() === '') && typeof row[trackNumberHeaderIndex + 1] !== 'undefined') {
+                trackNo = row[trackNumberHeaderIndex + 1];
+            }
+            // check to the left as a safety
+            if ((!trackNo || String(trackNo).trim() === '') && typeof row[trackNumberHeaderIndex - 1] !== 'undefined') {
+                trackNo = row[trackNumberHeaderIndex - 1];
+            }
+        }
+
+        // final fallback: whatever createColumnMapping found previously
+        if ((!trackNo || String(trackNo).trim() === '') && cols.trackNo !== -1) {
+            trackNo = row[cols.trackNo];
+        }
+
+        // Normalise to numeric substring if possible (e.g. "Track 3" => "3")
+        if (trackNo !== undefined && trackNo !== null && String(trackNo).trim() !== '') {
+            const m = String(trackNo).match(/(\d+)/);
+            if (m) trackNo = m[1];
+            else trackNo = String(trackNo).trim();
+        } else {
+            trackNo = '';
+        }
+
         if (isrc && uniqueTracks.has(isrc)) {
             const trackId = uniqueTracks.get(isrc).trackId;
             const albumId = albumMap.get(`${albumTitle}_${barcode}`);
             if (trackId && albumId) {
-                trackToAlbumData.push([
-                    albumId, // Album ID
-                    trackId, // Track ID
-                    volumeNo, // Disc Number
-                    '', // Side (optional)
-                    trackNo // Track Number
-                ]);
+                if (useMachineHeaders) {
+                    // Build a row aligned to the template's machine headers
+                    const alignedRow = machineHeaders.map(hdr => {
+                        const key = String(hdr || '').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+
+                        // album import/id
+                        if (key.includes('album') && (key.includes('id') || key.includes('import') || key.includes('album_im') || key.includes('album'))) {
+                            return albumId;
+                        }
+
+                        // track import/id (but not track number)
+                        if (key.includes('track') && (key.includes('id') || key.includes('import')) && !key.includes('number')) {
+                            return trackId;
+                        }
+
+                        // disc / disc number
+                        if (key.includes('disc') || key.includes('disc_number') || key.includes('discnumber')) {
+                            return volumeNo;
+                        }
+
+                        // explicit mapping for track number machine key
+                        if (key === 'track_number' || key.includes('track_number') || key.includes('trackno') || key.includes('track_number') || key.includes('_track_number')) {
+                            return trackNo;
+                        }
+
+                        // fallback common cases (if header is simply 'track' but template expects track id)
+                        if (key === 'track' || key === 'track_id' || key === 'track_im' ) {
+                            // if there is 'number' in the header string we'd have returned above
+                            return trackId;
+                        }
+
+                        // default: empty cell to preserve template width
+                        return '';
+                    });
+
+                    trackToAlbumData.push(alignedRow);
+                } else {
+                    // older/fallback template structure: append in expected order
+                    trackToAlbumData.push([
+                        albumId,    // Album ID
+                        trackId,    // Track ID
+                        volumeNo,   // Disc Number
+                        '',         // Side (optional)
+                        trackNo     // Track Number
+                    ]);
+                }
             }
         }
     });
-    
-    // TrackPrimaryContributions
+
+    // TrackPrimaryContributions (same as before)
     const trackPrimaryData = [];
     uniqueTracks.forEach((track, isrc) => {
         trackPrimaryData.push([
@@ -1402,8 +1496,8 @@ function populateUniversalMappings(uniqueTracks, dataRows, cols) {
             '' // featured
         ]);
     });
-    
-    // MapWorkToTrack
+
+    // MapWorkToTrack (same as before)
     const workToTrackData = [];
     uniqueTracks.forEach((track, isrc) => {
         const workId = track.trackId.replace('TRACK', 'WORK');
@@ -1413,7 +1507,7 @@ function populateUniversalMappings(uniqueTracks, dataRows, cols) {
             '' // empty column
         ]);
     });
-    
+
     // Populate sheets if they exist
     if (templateStructure.sheets['MapTrackToAlbum']) {
         populateSheetUniversal('MapTrackToAlbum', trackToAlbumData);
@@ -1425,6 +1519,7 @@ function populateUniversalMappings(uniqueTracks, dataRows, cols) {
         populateSheetUniversal('MapWorkToTrack', workToTrackData);
     }
 }
+
 
 function populateUniversalContributions(uniqueTracks) {
     const openPlayRoleMapping = createOpenPlayRoleMapping();
@@ -1469,8 +1564,9 @@ function populateUniversalContributions(uniqueTracks) {
        
         // Process pipe-delimited performers
         if (track.contributors.performers && track.contributors.performers.trim()) {
-            const performerNames = track.contributors.performers.split('|').map(name => name.trim()).filter(name => name);
-            const performerRoles = track.contributors.roles ? track.contributors.roles.split('|').map(role => role.trim()).filter(role => role) : [];
+			const performerNames = track.contributors.performers.split(/[|/;,]/).map(name => name.trim()).filter(name => name);
+			const performerRoles = track.contributors.roles ? track.contributors.roles.split(/[|/;,]/).map(role => role.trim()).filter(role => role) : [];
+
    
             performerNames.forEach((performer, index) => {
                 const roleString = performerRoles[index] || performerRoles[0] || 'Performer';
@@ -1493,13 +1589,13 @@ function populateUniversalContributions(uniqueTracks) {
             { name: track.contributors.producer, originalType: 'Producer' },
             { name: track.contributors.engineer, originalType: 'Recording Engineer' },
             { name: track.contributors.mixer, originalType: 'Mixer' },
-            { name: track.contributors.mixEngineer, originalType: 'Mix Engineer' },
+            { name: track.contributors.mixEngineer, originalType: 'Mixing Engineer' },
             { name: track.contributors.masteringEngineer, originalType: 'Mastering Engineer' }
         ];
        
         contributorTypes.forEach(contributor => {
             if (contributor.name && contributor.name.trim()) {
-                const names = contributor.name.split(/[,;]/).map(name => name.trim()).filter(name => name);
+				const names = contributor.name.split(/[|/;,]/).map(name => name.trim()).filter(name => name);
        
                 names.forEach(name => {
                     const openPlayMapping = getOpenPlayRole(contributor.originalType);
@@ -1515,7 +1611,7 @@ function populateUniversalContributions(uniqueTracks) {
        
         // Work contributors (writers)
         if (track.contributors.writer && track.contributors.writer.trim()) {
-            const writers = track.contributors.writer.split(/[,;]/).map(w => w.trim()).filter(w => w);
+            const writers = track.contributors.writer.split(/[|/;,]/).map(w => w.trim()).filter(w => w);
    
             writers.forEach(writer => {
                 workContribData.push([
@@ -1583,6 +1679,7 @@ function createOpenPlayRoleMapping() {
         'Violin': { role: 'Instrument', type: 'Violin' },
         'Viola': { role: 'Instrument', type: 'Viola' },
         'Cello': { role: 'Instrument', type: 'Cello' },
+		'Mandolin': { role: 'Instrument', type: 'Mandolin' },
        
         // Instruments - Keys & Wind
         'Piano': { role: 'Instrument', type: 'Piano' },
