@@ -420,7 +420,7 @@ html {
 </div>
 <div class="top-actions">
 <div class="pulse-ring" title="Live"></div>
-<div style="color:rgba(255,255,255,.95);font-weight:50">v0.9.8</div>
+<div style="color:rgba(255,255,255,.95);font-weight:50">v0.9.9</div>
 </div>
 </header>
 <section class="grid">
@@ -810,6 +810,7 @@ function createColumnMapping(headerRow) {
         'productGenre': ['Product Genre', 'Genre', 'Primary Genre'],
         'volumeNo': ['Volume No.', 'Volume', 'Disc No.', 'Disc Number'],
         'sides': ['Sides (if vinyl)', 'Sides', 'Side'],
+		'parental_advisory': ['Track Explicit Lyrics', 'Explicit', 'Parental Advisory'],
         'trackNo': ['Track No.', 'Track Number', '#', 'Track Seq'],
         'trackPrimaryArtist': ['Track Primary Artist', 'Artist', 'Track Artist', 'Primary Artist'],
         'trackMainTitle': ['Track Main Title', 'Song Title', 'Track Title', 'Main Title', 'Title'],
@@ -936,6 +937,7 @@ function createTrackObject(row, cols, trackId) {
         cHolder: row[cols.trackCHolder] || '',
         language: row[cols.trackLanguage] || 'English',
         genre: row[cols.productGenre] || '',
+		parentaladvisory: row[cols.parental_advisory] || '',	
         label: row[cols.recordLabel] || '',
         albumInfo: {
             title: row[cols.productTitle] || '',
@@ -1170,7 +1172,7 @@ function createTrackData(uniqueTracks) {
             track_type: 'Audio',
             configuration: '',
             video_type: '',
-            parental_advisory: '',
+            parental_advisory: track.parentaladvisory,
             primary_genre_code: track.genre,
             primary_sub_genre_code: '',
             import_music_type: '',
@@ -1711,19 +1713,58 @@ function createOpenPlayRoleMapping() {
 
 function formatDate(dateValue) {
     if (!dateValue) return "";
-   
-    if (typeof dateValue === 'number') {
-        const date = new Date((dateValue - 25569) * 86400 * 1000);
-        return date.toISOString().split('T')[0];
+
+    // --- Case 1: Excel numeric date serial (e.g. 45565) ---
+    if (typeof dateValue === "number") {
+        const utcDays = Math.floor(dateValue - 25569);
+        const utcMilliseconds = utcDays * 86400 * 1000;
+        const date = new Date(utcMilliseconds);
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+        const day = String(date.getUTCDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
     }
-   
-    if (typeof dateValue === 'string') {
-        const date = new Date(dateValue);
-        if (!isNaN(date.getTime())) {
-            return date.toISOString().split('T')[0];
+
+    // --- Case 2: String date (e.g. "10/10/2025" or "2025-10-10") ---
+    if (typeof dateValue === "string") {
+        const str = dateValue.trim();
+
+        // Already ISO-like → return safely
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+
+        // Handle DD/MM/YYYY or MM/DD/YYYY ambiguity explicitly
+        const match = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+        if (match) {
+            let [ , part1, part2, part3 ] = match.map(x => x.trim());
+            let day, month, year;
+
+            // Heuristic: if the last part is 4 digits → that’s the year
+            if (part3.length === 4) {
+                // Assume DD/MM/YYYY (European-style) because your example 10/10/2025 implies that
+                day = part1;
+                month = part2;
+                year = part3;
+            } else if (part1.length === 4) {
+                // YYYY/MM/DD
+                year = part1;
+                month = part2;
+                day = part3;
+            } else {
+                // If ambiguous and year is 2 digits, assume 20xx
+                year = "20" + part3.padStart(2, "0");
+                day = part1;
+                month = part2;
+            }
+
+            const date = new Date(Date.UTC(+year, +month - 1, +day));
+            const y = date.getUTCFullYear();
+            const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+            const d = String(date.getUTCDate()).padStart(2, "0");
+            return `${y}-${m}-${d}`;
         }
     }
-   
+
+    // --- Fallback ---
     return dateValue;
 }
 
@@ -1809,12 +1850,6 @@ function downloadResult() {
           }
         } catch (e) { console.warn('Drop fallback failed', e); }
       }
-    }, false);
-
-    // Also make clicking on the zone trigger click of input (label does this already)
-    zone.addEventListener('click', e => {
-      const input = document.getElementById(inputId);
-      if (input) input.click();
     }, false);
   }
 
